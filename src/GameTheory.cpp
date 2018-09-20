@@ -5,9 +5,6 @@
 #include "MyGlobalParameters.h"
 
 
-GameTheoty::GameTheoty(const char * argv[]) : BaseFramework(argv){}
-
-
 inline float getTransprob(Vertex * _u, Vertex * _v)
 {
 	float real_total_edgeweight = 0.0f;
@@ -20,7 +17,7 @@ inline float getTransprob(Vertex * _u, Vertex * _v)
 }
 
 
-inline float GameTheoty::getResponsecost(int _vertexid, int _clusterid)
+inline float GameTheory::getResponsecost(int _vertexid, int _clusterid)
 {
 	// dblp_8w :   9.0741f
 	// flickr_9w:  37.4126f
@@ -62,7 +59,7 @@ inline float GameTheoty::getResponsecost(int _vertexid, int _clusterid)
 }
 
 
-//inline float GameTheoty::getClusterEntropy(set<int> & _cluster)
+//inline float GameTheory::getClusterEntropy(set<int> & _cluster)
 //{
 //	float entropy = 0.0f;
 //	for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
@@ -73,7 +70,7 @@ inline float GameTheoty::getResponsecost(int _vertexid, int _clusterid)
 //}
 
 
-//inline float GameTheoty::AET_getClusterEntropy(int _vertexid, int _clusterid)
+//inline float GameTheory::AET_getClusterEntropy(int _vertexid, int _clusterid)
 //{
 //	float total_entropy = 0.0f;
 //	for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
@@ -97,7 +94,7 @@ inline float GameTheoty::getResponsecost(int _vertexid, int _clusterid)
 //}
 
 
-void GameTheoty::gameTheory_ReservePush()
+void GameTheory::gameTheory_ReservePush()
 {
 	m_pprDistances.clear();  // 初始化
 
@@ -150,7 +147,7 @@ void GameTheoty::gameTheory_ReservePush()
 }
 
 
-void GameTheoty::buildGlobalTable()
+void GameTheory::buildGlobalTable()
 {
 	// == Initialize
 	m_GlobalTable.clear();  
@@ -292,7 +289,7 @@ void GameTheoty::buildGlobalTable()
 }
 
  
-//void GameTheoty::initializeHappyQueue()
+//void GameTheory::initializeHappyQueue()
 //{
 //	m_happy_queue.clear();  // 初始化
 //	cost_queue.clear();     // 初始化
@@ -353,7 +350,7 @@ void GameTheoty::buildGlobalTable()
 
 
 //// 存在最小代价更新后判断错误的情况【废弃】
-//void GameTheoty::bestResponseDynamics()
+//void GameTheory::bestResponseDynamics()
 //{
 //	m_updatetimes = 0; 
 //	while (!m_happy_queue.empty())
@@ -441,7 +438,7 @@ void GameTheoty::buildGlobalTable()
 //}
 
 
-void GameTheoty::bestResponseDynamics()
+void GameTheory::bestResponseDynamics()
 {
 	m_updatetimes = 0;    // 初始化
 
@@ -587,7 +584,7 @@ void GameTheoty::bestResponseDynamics()
 }
 
 
-//void GameTheoty::E_buildGlobalTable()
+//void GameTheory::E_buildGlobalTable()
 //{
 //	// 初始化
 //	m_GlobalTable.clear();
@@ -639,7 +636,7 @@ void GameTheoty::bestResponseDynamics()
 //}
 //
 //
-//void GameTheoty::AET_buildGlobalTable()
+//void GameTheory::AET_buildGlobalTable()
 //{
 //	// 初始化
 //	m_GlobalTable.clear();
@@ -720,7 +717,7 @@ void GameTheoty::bestResponseDynamics()
 //}
 //
 //
-//void GameTheoty::E_initializeHappyQueue()
+//void GameTheory::E_initializeHappyQueue()
 //{
 //	m_happy_queue.clear();  // 初始化
 //
@@ -776,7 +773,7 @@ void GameTheoty::bestResponseDynamics()
 //}
 //
 //
-//void GameTheoty::E_bestResponseDynamics()
+//void GameTheory::E_bestResponseDynamics()
 //{
 //	m_updatetimes = 0;
 //	while (!m_happy_queue.empty())
@@ -867,7 +864,7 @@ void GameTheoty::bestResponseDynamics()
 //}
 //
 //
-//void GameTheoty::AET_bestResponseDynamics()
+//void GameTheory::AET_bestResponseDynamics()
 //{
 //	m_updatetimes = 0;
 //	while (!m_happy_queue.empty())
@@ -956,7 +953,7 @@ void GameTheoty::bestResponseDynamics()
 //}
 
 
-void GameTheoty::gatherClusterResult()
+void GameTheory::gatherClusterResult()
 {
 	vector<set<int>> old_clusters(m_clusters);
 	vector<set<int>> new_clusters(m_clusters.size());
@@ -986,7 +983,7 @@ void GameTheoty::gatherClusterResult()
 }
 
 
-void GameTheoty::gameTheoryModulation()
+void GameTheory::gameTheoryModulation()
 {
 	// 1. assignment cost == ppr
 	// --------------------------------------------------
@@ -1014,7 +1011,7 @@ void GameTheoty::gameTheoryModulation()
 }
 
 
-void GameTheoty::execute()
+void GameTheory::execute()
 {
 	string result_output = g_resultpath + "result_" + to_string(g_datasetid) + "_" + to_string(g_delta)
 		+ "_" + to_string(m_minPts) + "_" + to_string(g_gamma) + "_" + to_string(g_epsilon) + ".txt";
