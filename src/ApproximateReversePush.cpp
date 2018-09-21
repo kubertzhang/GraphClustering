@@ -8,9 +8,6 @@
 using namespace std;
 
 
-ApproximateReversePush::ApproximateReversePush(const char * argv[]) : BaseFramework(argv){}
-
-
 inline float getTransprob(Vertex * _u, Vertex * _v)
 {
 	float real_total_edgeweight = 0.0f;
@@ -23,7 +20,7 @@ inline float getTransprob(Vertex * _u, Vertex * _v)
 }
 
 
-void ApproximateReversePush::reversePush_Pre_Encode()
+void ApproximateReservePush::reservePush_Pre_Encode()
 {
 	static float * p = new float[g_vertexnum];
 	static float * r = new float[g_vertexnum];
@@ -78,7 +75,7 @@ void ApproximateReversePush::reversePush_Pre_Encode()
 
 			p[uID] += g_alpha * r[uID];      // estimated value
 
-			//遍历u能够到达的点（reverse push）
+			//遍历u能够到达的点（reserve push）
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -241,131 +238,131 @@ void ApproximateReversePush::reversePush_Pre_Encode()
 
 
 // 单线程，用于测试
-//void approximateReversePushSingleThreadUpdate(ofstream & log_ou)
-//{
-//	int taskid = 0;  // 人为指定文件名称编号
-//
-//	int pr_id = 0;
-//	int ud_id = 0;
-//	int checkID = -1;
-//
-//	g_mmfpool[taskid] = new MMF();
-//	char sharedname[1024] = "\0";
-//	char filename[1024] = "\0";
-//	sprintf_s(sharedname, "%d%s%d%s%d%s%d", g_datasetid, "_", g_clustertype, "_", g_schemeid, "_", taskid);
-//	sprintf_s(filename, "%s%d%s%d%s%d%s%d", g_mmfPath.data(), g_datasetid, "_", g_clustertype, "_", g_schemeid, "_", taskid, ".mmf");
-//	g_mmfpool[taskid]->mmfCreate(sharedname, filename, a_mmfsizehigh, a_mmfsizelow, g_mmfm_address_pool[taskid]);
-//	memset(g_bufferpool[taskid], 0, a_mmf_buffer_size);
-//	memcpy(g_bufferpool[taskid], g_mmfm_address_pool[taskid], a_mmf_buffer_size);
-//	g_mmfpool[taskid]->mmfClose(g_mmfm_address_pool[taskid]);
-//	delete g_mmfpool[taskid];
-//	// --------------------------------------------------------------------------------------
-//
-//	float * buffersection = g_bufferpool[taskid];
-//	int b_index = 0;
-//	int b_p_count;
-//	int b_r_count;
-//	int b_ur_count;
-//	float continue_flag;
-//
-//	int targetID;
-//
-//	while (true)
-//	{
-//		memset(g_pr_pool[pr_id], 0, 2 * g_vertexnum * sizeof(float));   // 最后一位保存targetid
-//
-//		targetID = (int)round(buffersection[b_index++]);                // _pr 最后一位保存 target_id
-//		b_p_count = (int)round(buffersection[b_index++]);
-//		b_r_count = (int)round(buffersection[b_index++]);
-//		b_ur_count = (int)round(buffersection[b_index++]);
-//
-//		cout << targetID << endl;
-//
-//		// decode estimate value
-//		for (int i = 0; i < b_p_count; i++)
-//		{
-//			int p_id = (int)round(buffersection[b_index++]);
-//			g_pr_pool[pr_id][p_id] = buffersection[b_index++];
-//		}
-//
-//		// decode residual value
-//		for (int i = 0; i < b_r_count; i++)
-//		{
-//			int r_id = g_vertexnum + (int)round(buffersection[b_index++]);
-//			g_pr_pool[pr_id][r_id] = buffersection[b_index++];
-//		}
-//
-//		// decode update residual value
-//		for (int i = 0; i < b_ur_count; i++)
-//		{
-//			int ur_id = g_vertexnum + (int)round(buffersection[b_index++]);
-//			for (int j = 1; j <= ATTRIBUTE_NUM; j++)
-//			{
-//				g_pr_pool[pr_id][ur_id] += (g_edgeweight[STRUCTURE][j] - g_base_weight[j]) * buffersection[b_index++];
-//			}
-//		}
-//
-//		// 更新
-//		set<int> pushback_queue;
-//
-//		for (int i = g_cluster_startid; i <= g_cluster_endid; i++)
-//		{
-//			if (g_pr_pool[ud_id][g_vertexnum + i] > g_epsilon)
-//			{
-//				pushback_queue.insert(i);
-//			}
-//		}
-//
-//		// 根据更新结果再次进行 pushback
-//		while (pushback_queue.size() > 0)
-//		{
-//			//push_back u
-//			int uID = *pushback_queue.begin();
-//			pushback_queue.erase(pushback_queue.begin());
-//
-//			Vertex * u = g_vertices[uID];                                            // 读取带pushback节点信息
-//
-//			g_pr_pool[ud_id][uID] += g_alpha * g_pr_pool[ud_id][g_vertexnum + uID];      // estimated value
-//
-//			//遍历u能够到达的点（reverse push）
-//			for (auto & wID : u->neighborvertex)
-//			{
-//				Vertex * w = g_vertices[wID];
-//				g_pr_pool[ud_id][g_vertexnum + wID] += (1 - g_alpha) * g_pr_pool[ud_id][g_vertexnum + uID] * getTransprob(w, u);    // residual value
-//
-//				if (g_pr_pool[ud_id][g_vertexnum + wID] > g_epsilon)
-//				{
-//					pushback_queue.insert(wID);
-//				}
-//			}
-//			g_pr_pool[ud_id][g_vertexnum + uID] = 0;
-//		}
-//		pushback_queue.clear();
-//
-//		// 获取邻居
-//		set<int> n_set;
-//		for (int i = 0; i < g_vertexnum; i++)
-//		{
-//			if (g_pr_pool[ud_id][i] > g_delta)
-//			{
-//				n_set.insert(i);
-//			}
-//		}
-//
-//		g_dbscanneighborsets.insert(pair<int, set<int>>(targetID, n_set));
-//		n_set.clear();
-//
-//		// 结束标志
-//		continue_flag = buffersection[b_index++];
-//		if (continue_flag < 0)
-//		{
-//			break;
-//		}
-//	}
-//}
+void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
+{
+	int taskid = 0;  // 人为指定文件名称编号
+
+	int pr_id = 0;
+	int ud_id = 0;
+	int checkID = -1;
+
+	g_mmfpool[taskid] = new MMF();
+	char sharedname[1024] = "\0";
+	char filename[1024] = "\0";
+	sprintf_s(sharedname, "%d%s%d%s%d%s%d", g_datasetid, "_", g_clustertype, "_", g_schemeid, "_", taskid);
+	sprintf_s(filename, "%s%d%s%d%s%d%s%d", g_mmfPath.data(), g_datasetid, "_", g_clustertype, "_", g_schemeid, "_", taskid, ".mmf");
+	g_mmfpool[taskid]->mmfCreate(sharedname, filename, a_mmfsizehigh, a_mmfsizelow, g_mmfm_address_pool[taskid]);
+	memset(g_bufferpool[taskid], 0, a_mmf_buffer_size);
+	memcpy(g_bufferpool[taskid], g_mmfm_address_pool[taskid], a_mmf_buffer_size);
+	g_mmfpool[taskid]->mmfClose(g_mmfm_address_pool[taskid]);
+	delete g_mmfpool[taskid];
+	// --------------------------------------------------------------------------------------
+
+	float * buffersection = g_bufferpool[taskid];
+	int b_index = 0;
+	int b_p_count;
+	int b_r_count;
+	int b_ur_count;
+	float continue_flag;
+
+	int targetID;
+
+	while (true)
+	{
+		memset(g_pr_pool[pr_id], 0, 2 * g_vertexnum * sizeof(float));   // 最后一位保存targetid
+
+		targetID = (int)round(buffersection[b_index++]);                // _pr 最后一位保存 target_id
+		b_p_count = (int)round(buffersection[b_index++]);
+		b_r_count = (int)round(buffersection[b_index++]);
+		b_ur_count = (int)round(buffersection[b_index++]);
+
+		cout << targetID << endl;
+
+		// decode estimate value
+		for (int i = 0; i < b_p_count; i++)
+		{
+			int p_id = (int)round(buffersection[b_index++]);
+			g_pr_pool[pr_id][p_id] = buffersection[b_index++];
+		}
+
+		// decode residual value
+		for (int i = 0; i < b_r_count; i++)
+		{
+			int r_id = g_vertexnum + (int)round(buffersection[b_index++]);
+			g_pr_pool[pr_id][r_id] = buffersection[b_index++];
+		}
+
+		// decode update residual value
+		for (int i = 0; i < b_ur_count; i++)
+		{
+			int ur_id = g_vertexnum + (int)round(buffersection[b_index++]);
+			for (int j = 1; j <= ATTRIBUTE_NUM; j++)
+			{
+				g_pr_pool[pr_id][ur_id] += (g_edgeweight[STRUCTURE][j] - g_base_weight[j]) * buffersection[b_index++];
+			}
+		}
+
+		// 更新
+		set<int> pushback_queue;
+
+		for (int i = g_cluster_startid; i <= g_cluster_endid; i++)
+		{
+			if (g_pr_pool[ud_id][g_vertexnum + i] > g_epsilon)
+			{
+				pushback_queue.insert(i);
+			}
+		}
+
+		// 根据更新结果再次进行 pushback
+		while (pushback_queue.size() > 0)
+		{
+			//push_back u
+			int uID = *pushback_queue.begin();
+			pushback_queue.erase(pushback_queue.begin());
+
+			Vertex * u = g_vertices[uID];                                            // 读取带pushback节点信息
+
+			g_pr_pool[ud_id][uID] += g_alpha * g_pr_pool[ud_id][g_vertexnum + uID];      // estimated value
+
+			//遍历u能够到达的点（reserve push）
+			for (auto & wID : u->neighborvertex)
+			{
+				Vertex * w = g_vertices[wID];
+				g_pr_pool[ud_id][g_vertexnum + wID] += (1 - g_alpha) * g_pr_pool[ud_id][g_vertexnum + uID] * getTransprob(w, u);    // residual value
+
+				if (g_pr_pool[ud_id][g_vertexnum + wID] > g_epsilon)
+				{
+					pushback_queue.insert(wID);
+				}
+			}
+			g_pr_pool[ud_id][g_vertexnum + uID] = 0;
+		}
+		pushback_queue.clear();
+
+		// 获取邻居
+		set<int> n_set;
+		for (int i = 0; i < g_vertexnum; i++)
+		{
+			if (g_pr_pool[ud_id][i] > g_delta)
+			{
+				n_set.insert(i);
+			}
+		}
+
+		g_dbscanneighborsets.insert(pair<int, set<int>>(targetID, n_set));
+		n_set.clear();
+
+		// 结束标志
+		continue_flag = buffersection[b_index++];
+		if (continue_flag < 0)
+		{
+			break;
+		}
+	}
+}
 
 
-unsigned int __stdcall approximateReversePushMultiThreadUpdateFunc(PVOID pM)
+unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 {
 	int taskid = *(int*)pM;
 	SetEvent(g_hThreadEvent);      //触发事件
@@ -460,7 +457,7 @@ unsigned int __stdcall approximateReversePushMultiThreadUpdateFunc(PVOID pM)
 			g_pr_pool[buffer_id][uID] += g_alpha * g_pr_pool[buffer_id][g_vertexnum + uID];      // estimated value
 			pushback_c++;
 
-			//遍历u能够到达的点（reverse push）
+			//遍历u能够到达的点（reserve push）
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -511,7 +508,7 @@ unsigned int __stdcall approximateReversePushMultiThreadUpdateFunc(PVOID pM)
 }
 
 
-void ApproximateReversePush::approximateReversePushMultiThreadUpdate()
+void ApproximateReservePush::approximateReservePushMultiThreadUpdate()
 {
 	g_dbscanneighborsets.clear();   // 重置
 
@@ -527,7 +524,7 @@ void ApproximateReversePush::approximateReversePushMultiThreadUpdate()
 	{
 		// 等待有空的缓冲区出现
 		WaitForSingleObject(g_hSemaphoreRunnerNum, INFINITE);
-		hThread[i] = (HANDLE)_beginthreadex(NULL, 0, approximateReversePushMultiThreadUpdateFunc, &i, 0, NULL);
+		hThread[i] = (HANDLE)_beginthreadex(NULL, 0, approximateReservePushMultiThreadUpdateFunc, &i, 0, NULL);
 		WaitForSingleObject(g_hThreadEvent, INFINITE);             // 等待事件被触发  
 	}
 
@@ -541,7 +538,7 @@ void ApproximateReversePush::approximateReversePushMultiThreadUpdate()
 }
 
 
-void ApproximateReversePush::execute()
+void ApproximateReservePush::execute()
 {
 	string result_output = g_resultpath + "result_" + to_string(g_datasetid) + "_" + to_string(g_delta)
 		+ "_" + to_string(m_minPts) + "_" + to_string(g_gamma) + "_" + to_string(g_epsilon) + ".txt";
@@ -563,7 +560,7 @@ void ApproximateReversePush::execute()
 	// ====================================== 预处理 ====================================== 
 	if (g_preflag)
 	{
-		reversePush_Pre_Encode();   // 压缩
+		reservePush_Pre_Encode();   // 压缩
 		cout << "PreProcess is Completed!" << endl;
 		log_ou << "PreProcess is Completed!" << endl;
 		return;
@@ -575,7 +572,7 @@ void ApproximateReversePush::execute()
 	pre_file_in >> a_THREADNUM;
 	pre_file_in.close();
 	// ====================================== 迭代计算 ======================================
-	// ----- 分配缓冲区空间 -----
+	// 分配缓冲区空间
 	g_buffer_queue.clear();
 	for (int i = 0; i < g_buff_size; i++)
 	{
@@ -589,7 +586,7 @@ void ApproximateReversePush::execute()
 	long long total_running_time = 0;
 	for (int i = 0; i < runTimes; i++)
 	{
-		// 初始化
+		// Initialize
 		diff = 1e10;
 		iterTimes = 0;
 		total_pushback_times = 0;
@@ -598,24 +595,28 @@ void ApproximateReversePush::execute()
 		while (diff > 1e-2)
 		{
 			iterTimes++;
+			cout << "iterTimes = " << iterTimes << endl;
 			if (iterTimes > 30)
 			{
 				log_ou << "Can not converge!" << endl;
 				return;
 			}
 
-			// ----- 计算 ppr -----
+			// Conpute ppr score
 			g_pushbackcount = 0;
-			// === 单线程 ===
-			//approximateReversePushSingleThreadUpdate(log_ou);
-			// === 多线程 ===
-			approximateReversePushMultiThreadUpdate();
+			// 1. 单线程
+			//approximateReservePushSingleThreadUpdate(log_ou);
+			// 2. 多线程
+			approximateReservePushMultiThreadUpdate();
 			total_pushback_times += g_pushbackcount;
-			// ----- 对称化 -----
-			PPRSymmetrization();
-			// ----- dbscan -----
+
+			// Symmetrization
+			symmetrization();
+
+			// DBSCAN
 			dbscan();
-			// ----- 权重更新 -----
+
+			// Weight update
 			log_ou << "Current weight: ";
 			for (int i = ATTRIBUTE_1; i <= ATTRIBUTE_NUM; i++)
 			{
@@ -655,18 +656,10 @@ void ApproximateReversePush::execute()
 	// density
 	log_ou << "Cluster_Density: " << clusterEvaluate_Density() << endl;
 	// entropy
-	log_ou << "Cluster_Entropy1: " << clusterEvaluate_Entropy1() << endl;
-	// entropy2
-	//log_ou << "Cluster_Entropy2: " << clusterEvaluate_Entropy2() << endl;
-	// within cluster average distance
-	//log_ou << "Cluster_WithinClusterAveDistance: " << clusterEvaluate_WithinClusterAveDistance() << endl;
+	log_ou << "Cluster_Entropy: " << clusterEvaluate_NormalEntropy() << endl;
 
 	log_ou.close();
 
 	// 存储聚类结果
 	storeClusterResult(cluster_output);
-	// 存储聚类结果 == 对比SToC
-	string cluster_output_path = "F:\\WorkSpace\\GraphClustering\\GC_Result\\GT_vs_SToC\\cluster_result_2";
-	storeClusterResultForComparison(cluster_output_path);
-
 }

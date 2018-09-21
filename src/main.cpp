@@ -17,7 +17,7 @@ int main(int argc, const char * argv[])
 		argv[2] : g_epsilon     ppr 误差值 {0.001}
 		argv[3] : g_delta       dbscan 阈值 {0.005}
 		argv[4] : m_minPts      dbscan minPts {4}
-		argv[5] : dataset_id    数据集类型 {1 = dblp_8w, 2 = flickr_9w, 3 = dblp_3k, 4 = flickr_4k, 5 = case study - dblp_cs, 6 = football}
+		argv[5] : dataset_id    数据集类型 {1 = dblp_8w, 2 = flickr_9w, 3 = dblp_3k, 4 = flickr_4k, 5 = dblp_cs, 6 = football}
 		argv[6] : schemeid      算法方案编号 {1 = base, 2 = approximate, 3 = partial, 4 = game theory}
 		argv[7] ：pre_flag      是否进行预处理 {0 = no, 1 = yes}
 		argv[8] : g_gamma		博弈论代价函数参数 {0.5}
@@ -29,25 +29,25 @@ int main(int argc, const char * argv[])
 	{
 	case 1:{
 		// basic 
-		BaseReversePush brp(argv);
+		BaseReservePush brp(argv);
 		brp.execute();
 	}
 		   break;
 	case 2:{
 		// approximate
-		ApproximateReversePush arp(argv);
+		ApproximateReservePush arp(argv);
 		arp.execute();
 	}
 		   break;
 	case 3:{
 		// partial
-		PartialReversePush p_pr(argv);
+		PartialReservePush p_pr(argv);
 		p_pr.execute();
 	}
 		   break;
 	case 4:{
 		// game theory
-		GameTheoty gt(argv);
+		GameTheory gt(argv);
 		gt.execute();
 	}
 		   break;
@@ -80,7 +80,7 @@ int main(int argc, const char * argv[])
 	*/
 
 	ofstream nmi_ou;
-	nmi_ou.open("F:\\WorkSpace\\GraphClustering\\GC_ApproximateReversePush\\x64\\Release\\football_nmi_result.txt", ios::app);
+	nmi_ou.open("F:\\WorkSpace\\GraphClustering\\GC_ApproximateReservePush\\x64\\Release\\football_nmi_result.txt", ios::app);
 	Py_Initialize();      // 初始化python解释器,告诉编译器要用的python编译器
 	PyRun_SimpleString("import Py_NMI");         // 调用python文件
 
@@ -89,7 +89,7 @@ int main(int argc, const char * argv[])
 	// 需要在baseframework.cpp中注释语句
 	// ===========
 
-	// ApproximateReversePush.exe football.txt 0.001 0.005 4 6 1 0 0.5
+	// ApproximateReservePush.exe football.txt 0.001 0.005 4 6 1 0 0.5
 	g_epsilon = 0.001f;
 
 	int ptsNum = 6;
@@ -125,25 +125,25 @@ int main(int argc, const char * argv[])
 				{
 				case 1:{
 					// basic 
-					BaseReversePush brp(argv);
+					BaseReservePush brp(argv);
 					brp.execute();
 				}
 					   break;
 				case 2:{
 					// approximate
-					ApproximateReversePush arp(argv);
+					ApproximateReservePush arp(argv);
 					arp.execute();
 				}
 					   break;
 				case 3:{
 					// partial
-					PartialReversePush p_pr(argv);
+					PartialReservePush p_pr(argv);
 					p_pr.execute();
 				}
 					   break;
 				case 4:{
 					// game theory
-					GameTheoty gt(argv);
+					GameTheory gt(argv);
 					gt.execute();
 				}
 					   break;

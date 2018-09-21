@@ -19,10 +19,6 @@ inline float getTransprob(Vertex * _u, Vertex * _v)
 
 inline float GameTheory::getResponsecost(int _vertexid, int _clusterid)
 {
-	// dblp_8w :   9.0741f
-	// flickr_9w:  37.4126f
-	//m_cn = 9.0741f;    // 如果需要规范化参数的话可在此处人为设值
-
 	// 1. assignment cost = ppr; assignment cost only
 	// -----------------------------------------
 	//float ac = 0.0f;
@@ -30,68 +26,58 @@ inline float GameTheory::getResponsecost(int _vertexid, int _clusterid)
 	//if (m_GlobalTable[_vertexid][3 + 3 * _clusterid] > 0)
 	//	ac = m_cn * g_gamma * m_GlobalTable[_vertexid][3 + 3 * _clusterid + 1] / m_GlobalTable[_vertexid][3 + 3 * _clusterid];
 	//float cost_c = sc - ac;
-	// -----------------------------------------
 
 	// 2. assignment cost = ppr; assignment cost & social cost
 	// -----------------------------------------
-
-	//if (m_GlobalTable[_vertexid][3 + 3 * _clusterid] < 0)
-	//	cout << "================" << m_GlobalTable[_vertexid][3 + 3 * _clusterid] << endl;
-
 	float ac = 0.0f;
 	if (m_GlobalTable[_vertexid][3 + 3 * _clusterid] > 0)
 		ac = m_cn * g_gamma * m_GlobalTable[_vertexid][3 + 3 * _clusterid + 1] / m_GlobalTable[_vertexid][3 + 3 * _clusterid];
 	float sc = m_GlobalTable[_vertexid][3 + 3 * _clusterid + 2];
 	float cost_c = sc - ac;
-	// -----------------------------------------
 
 	// 3. assignment cost = entropy; assignment cost & social cost
 	// -----------------------------------------
 	//float sc = m_GlobalTable[_vertexid][3 + 2 * _clusterid + 1];
 	//float ac = m_cn * g_gamma * m_GlobalTable[_vertexid][3 + 2 * _clusterid];
 	//float cost_c = sc + ac;
-	// -----------------------------------------
-
-	//if(ac > 0)
-	//	cout << ac << "\t" << sc << "\t" << m_GlobalTable[_vertexid][3 + 3 * _clusterid] << endl;
 	
 	return cost_c;
 }
 
 
-//inline float GameTheory::getClusterEntropy(set<int> & _cluster)
-//{
-//	float entropy = 0.0f;
-//	for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
-//	{
-//		entropy += getEntropy(_cluster, STRUCTURE, i);
-//	}
-//	return (entropy / ATTRIBUTE_NUM);
-//}
+inline float GameTheory::getClusterEntropy(set<int> & _cluster)
+{
+	float entropy = 0.0f;
+	for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
+	{
+		entropy += getEntropy(_cluster, STRUCTURE, i);
+	}
+	return (entropy / ATTRIBUTE_NUM);
+}
 
 
-//inline float GameTheory::AET_getClusterEntropy(int _vertexid, int _clusterid)
-//{
-//	float total_entropy = 0.0f;
-//	for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
-//	{
-//		int total = 0;    // 统计连边总数
-//		for (auto & pair : AET[_vertexid][_clusterid][i - 1])       // 此处还可以预存
-//		{
-//			total += pair.second;
-//		}
-//		 
-//		float entropy = 0.0f;
-//		for (auto & pair : AET[_vertexid][_clusterid][i - 1])
-//		{
-//			float prob = pair.second * 1.0f / total;
-//			entropy += -1 * prob * log2(prob);
-//		}
-//
-//		total_entropy += entropy;
-//	}
-//	return (total_entropy / ATTRIBUTE_NUM);
-//}
+inline float GameTheory::AET_getClusterEntropy(int _vertexid, int _clusterid)
+{
+	float total_entropy = 0.0f;
+	for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
+	{
+		int total = 0;    // 统计连边总数
+		for (auto & pair : AET[_vertexid][_clusterid][i - 1])   // 此处还可以预存
+		{
+			total += pair.second;
+		}
+		 
+		float entropy = 0.0f;
+		for (auto & pair : AET[_vertexid][_clusterid][i - 1])
+		{
+			float prob = pair.second * 1.0f / total;
+			entropy += -1 * prob * log2(prob);
+		}
+
+		total_entropy += entropy;
+	}
+	return (total_entropy / ATTRIBUTE_NUM);
+}
 
 
 void GameTheory::gameTheory_ReservePush()
@@ -118,7 +104,7 @@ void GameTheory::gameTheory_ReservePush()
 			p[uID] += g_alpha * r[uID];     // estimated value
 			g_pushbackcount++;
 
-			//遍历u能够到达的点（reverse push）
+			//遍历u能够到达的点（reserve push）
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -270,196 +256,27 @@ void GameTheory::buildGlobalTable()
 			}
 		}
 
-		//float average_degree = (float)sum_degree / (m_valid_cluster_points.size() - ccount);
 		float average_degree = (float)sum_degree / ccount;
 		float average_weight = 1.0f;          // 连边都是同类型的主类节点，并且权重为1，否则需要另行处理       
-		//float average_max_ppr_dist = sum_max_ppr_dist / m_valid_cluster_points.size();
 		float average_max_ppr_dist = sum_max_ppr_dist / ccount;
-		//m_cn = average_degree * average_weight / (2.0f * sum_max_ppr_dist * (float)sqrt(m_clusters.size()));
 		m_cn = average_degree * average_weight / (2.0f * average_max_ppr_dist * (float)sqrt(m_clusters.size()));
-
-		//cout << "average_degree = " << average_degree << endl;
-		//cout << "average_max_ppr_dist = " << average_max_ppr_dist << endl;
-		//cout << "m_cn = " << m_cn << endl;
-		//getchar();
-
 		m_cn_flag = false;
 	}
 	
 }
-
- 
-//void GameTheory::initializeHappyQueue()
-//{
-//	m_happy_queue.clear();  // 初始化
-//	cost_queue.clear();     // 初始化
-//
-//	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
-//	{
-//		for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
-//		{
-//			// social cost
-//			Vertex * v = g_vertices[vertexid];
-//			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
-//			{
-//				int f = v->neighborvertex[i];  // f is friend of v
-//				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
-//				{
-//					auto iter = m_GlobalTable.find(f);
-//					int f_clusterid = (int)round(iter->second[0]);   // 获取f所在的类别
-//					m_GlobalTable[vertexid][3 + 3 * f_clusterid + 2] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];  // 修改social cost
-//				}
-//			}
-//
-//			// assignment cost
-//			for (auto & dis_map : m_pprDistances[vertexid])
-//			{
-//				int dis_id = dis_map.first;
-//
-//				if (dis_id == vertexid)  // 距离集合中包含自身，去掉
-//					continue;
-//
-//				if (m_valid_cluster_points.find(dis_id) != m_valid_cluster_points.end())
-//				{
-//					int dis_clusterid = (int)round(m_GlobalTable[dis_id][0]);               // 查找该点所在的类别
-//					m_GlobalTable[vertexid][3 + 3 * dis_clusterid] += 1;                    // num
-//					m_GlobalTable[vertexid][3 + 3 * dis_clusterid + 1] += dis_map.second;   // sum
-//				}
-//			}
-//
-//			// 存储代价与类别
-//			set<CostNode> ss;
-//			for (int c_id = 0; c_id < m_clusters.size(); c_id++)  
-//			{
-//				ss.insert(CostNode(c_id, getResponsecost(vertexid, c_id)));
-//			}
-//			
-//			cost_queue.insert(pair<int, set<CostNode>>(vertexid, ss));
-//				
-//			m_GlobalTable[vertexid][1] = (float)(ss.begin()->s_clusterid);       // 最小代价类别
-//
-//			// 如果当前类别和最小代价类别不同，则需要进行调整， 将需要调整的点放入happy queue
-//			if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))
-//			{
-//				m_happy_queue.insert(vertexid);
-//				//m_happy_queue.insert(DegreenNode(vertexid, (int)round(m_GlobalTable[vertexid][2])));
-//			}
-//		}
-//	}
-//}
-
-
-//// 存在最小代价更新后判断错误的情况【废弃】
-//void GameTheory::bestResponseDynamics()
-//{
-//	m_updatetimes = 0; 
-//	while (!m_happy_queue.empty())
-//	{
-//		// 获取需要调整的节点
-//		int response_vertexid = *m_happy_queue.begin();
-//		m_happy_queue.erase(m_happy_queue.begin());
-//
-//		m_updatetimes++;  // 统计更新的点的次数
-//
-//		// 进行类别调整与代价更新
-//		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
-//		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
-//
-//		if (currentclusterid == nextclusterid)      // 在本类代价进一步减小的情况
-//			continue;
-//
-//		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // 调整类别
-//		
-//		// 根据调整的变化调节其他所有点的 assignment cost
-//		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
-//		{
-//			for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
-//			{
-//				if (vertexid == response_vertexid)  // vertexid自身的 assignment cost 不变
-//					continue;
-//
-//				/*
-//					response_vertexid调整, 其他vertexid的currentclusterid处的assignment cost可能发生变化
-//					如果vertexid和response_vertexid之间的ppr score > 0, 则会引起assignment cost的变化, 进行调整;
-//					否则, 不进行调整
-//				*/
-//				// 处理旧类
-//				if (m_pprDistances[vertexid].find(response_vertexid) != m_pprDistances[vertexid].end())   // vertexid 和 response_vertexid 之间的 ppr > 0
-//				{
-//					m_GlobalTable[vertexid][3 + 3 * currentclusterid] -= 1;
-//					m_GlobalTable[vertexid][3 + 3 * currentclusterid + 1] -= m_pprDistances[vertexid][response_vertexid];
-//				}
-//				float cost_old = getResponsecost(vertexid, currentclusterid);   // ** 计算代价
-//
-//				// 处理新类
-//				if (m_pprDistances[vertexid].find(response_vertexid) != m_pprDistances[vertexid].end())
-//				{
-//					m_GlobalTable[vertexid][3 + 3 * nextclusterid] += 1;
-//					m_GlobalTable[vertexid][3 + 3 * nextclusterid + 1] += m_pprDistances[vertexid][response_vertexid];
-//				}
-//				float cost_new = getResponsecost(vertexid, nextclusterid);      // ** 计算代价
-//
-//				// 更新最优代价
-//				float cost_c = min(cost_old, cost_new);
-//				if (cost_c < m_GlobalTable[vertexid][2])
-//				{
-//					m_GlobalTable[vertexid][2] = cost_c;
-//					m_GlobalTable[vertexid][1] = (cost_old < cost_new) ? (float)currentclusterid : (float)nextclusterid;
-//					m_happy_queue.insert(vertexid);
-//				}
-//				
-//			}
-//		}
-//
-//		// 根据邻居节点调整 social cost
-//		Vertex * v = g_vertices[response_vertexid];
-//		for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
-//		{
-//			int f = v->neighborvertex[i];  // f is friend of v
-//			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
-//			{
-//				// 旧类，此处代价只会增大，不会有更小的解
-//				m_GlobalTable[f][3 + 3 * currentclusterid + 2] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-//
-//				// 新类
-//				m_GlobalTable[f][3 + 3 * nextclusterid + 2] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-//
-//				// ** 计算代价
-//				float cost_c = getResponsecost(f, nextclusterid);
-//				if (cost_c < m_GlobalTable[f][2])
-//				{
-//					m_GlobalTable[f][2] = cost_c;
-//					m_GlobalTable[f][1] = (float)nextclusterid;
-//					m_happy_queue.insert(f);
-//				}
-//			}
-//		}
-//	}
-//}
 
 
 void GameTheory::bestResponseDynamics()
 {
 	m_updatetimes = 0;    // 初始化
 
-	//clock_t t_start, t_end;
-	//clock_t c_start, c_end;
-	//int c_total = 0;
-
-	//t_start = clock();
-
 	while (!m_happy_queue.empty())
 	{
 		// 获取需要调整的节点
 		int response_vertexid = m_happy_queue.top();
 		m_happy_queue.pop();
-		//DegreenNode dn = *m_happy_queue.begin();
-		//int response_vertexid = dn.s_vertexid;
 
 		m_updatetimes++;  // 统计更新的点的次数
-		//cout << "m_updatetimes = " << m_updatetimes << endl;
-
-		//cout << response_vertexid << "\t";
 
 		// 进行类别调整与代价更新
 		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
@@ -531,7 +348,6 @@ void GameTheory::bestResponseDynamics()
 					if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))  // 需要进行类别更新
 					{
 						m_happy_queue.push(vertexid);
-						//m_happy_queue.insert(DegreenNode(vertexid, (int)round(m_GlobalTable[vertexid][2])));
 					}
 
 					continue;
@@ -574,383 +390,380 @@ void GameTheory::bestResponseDynamics()
 				if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))  // 需要进行类别更新
 				{
 					m_happy_queue.push(vertexid);
-					//m_happy_queue.insert(DegreenNode(vertexid, (int)round(m_GlobalTable[vertexid][2])));
 				}
 			}
 		}
 	}
-
-	//t_end = clock();
 }
 
 
-//void GameTheory::E_buildGlobalTable()
-//{
-//	// 初始化
-//	m_GlobalTable.clear();
-//	AET.clear();
-//	for (auto v_id : m_valid_cluster_points)
-//	{
-//		m_GlobalTable.insert(pair<int, vector<float>>(v_id, vector<float>(3 + 2 * m_clusters.size(), 0)));
-//		AET.insert(pair<int, vector<vector<unordered_map<int, int>>>>(v_id, vector<vector<unordered_map<int, int>>>
-//			(m_clusters.size(), vector<unordered_map<int, int>>(ATTRIBUTE_NUM, unordered_map<int, int>()))));
-//	}
-//
-//	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
-//	{
-//		for (auto vertexid : m_clusters[clusterid])
-//		{
-//			// 初始化表头
-//			m_GlobalTable[vertexid][0] = (float)clusterid;      // 实际类别
-//			m_GlobalTable[vertexid][1] = -1.0f;                 // 最小代价类别
-//			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = 无穷大
-//
-//			// 计算maxSC
-//			int valid_neighbor_num = 0;
-//			Vertex * v = g_vertices[vertexid];
-//			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
-//			{
-//				int f = v->neighborvertex[i];     // f is a friend of v
-//				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // 邻居点中只选择 valid point
-//				{
-//					valid_neighbor_num++;
-//				}
-//			}
-//			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // 连边都是同类型的主类节点，并且权重为1，否则需要另行处理
-//
-//			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // 对每个簇
-//			{
-//				// 保存maxSC
-//				m_GlobalTable[vertexid][3 + 2 * c_id + 1] = maxSC;
-//				
-//				// 计算当前节点分配到各个簇的熵
-//				set<int> temp_cluster(m_clusters[c_id]);   // 复制cluster
-//				if (c_id != clusterid)
-//					temp_cluster.insert(vertexid);         // 待分配节点加入各个簇中
-//
-//				// 计算熵
-//				//m_GlobalTable[vertexid][3 + 2 * c_id] = getClusterEntropy(temp_cluster);
-//			}
-//		}
-//	}
-//}
-//
-//
-//void GameTheory::AET_buildGlobalTable()
-//{
-//	// 初始化
-//	m_GlobalTable.clear();
-//	AET.clear();
-//	for (auto v_id : m_valid_cluster_points)
-//	{
-//		m_GlobalTable.insert(pair<int, vector<float>>(v_id, vector<float>(3 + 2 * m_clusters.size(), 0)));
-//		AET.insert(pair<int, vector<vector<unordered_map<int, int>>>>(v_id, vector<vector<unordered_map<int, int>>>
-//			(m_clusters.size(), vector<unordered_map<int, int>>(ATTRIBUTE_NUM, unordered_map<int, int>()))));
-//	}
-//
-//	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
-//	{
-//		for (auto vertexid : m_clusters[clusterid])
-//		{
-//			// 初始化表头
-//			m_GlobalTable[vertexid][0] = (float)clusterid;      // 实际类别
-//			m_GlobalTable[vertexid][1] = -1.0f;                 // 最小代价类别
-//			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = 无穷大
-//
-//			// 计算maxSC
-//			int valid_neighbor_num = 0;
-//			Vertex * v = g_vertices[vertexid];
-//			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
-//			{
-//				int f = v->neighborvertex[i];     // f is a friend of v
-//				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // 邻居点中只选择 valid point
-//				{
-//					valid_neighbor_num++;
-//				}
-//			}
-//			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // 连边都是同类型的主类节点，并且权重为1，否则需要另行处理
-//
-//			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // 对每个簇
-//			{
-//				// 保存maxSC
-//				m_GlobalTable[vertexid][3 + 2 * c_id + 1] = maxSC;
-//
-//				// 计算当前节点分配到各个簇的熵
-//				set<int> temp_cluster(m_clusters[c_id]);   // 复制cluster
-//				if (c_id != clusterid)
-//					temp_cluster.insert(vertexid);         // 待分配节点加入各个簇中
-//
-//				// 构建appearances表
-//				// ------------------------------------------------------------
-//				for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
-//				{
-//					int type1 = STRUCTURE;
-//					int type2 = i;
-//
-//					//枚举簇里面的每一个点作为源点
-//					for (int vid : temp_cluster)
-//					{
-//						Vertex * v = g_vertices[vid];
-//
-//						if (v->vertextype == type1)             //如果该点属于type1
-//						{
-//							//枚举这个点能到达的其他点
-//							for (auto & uid : v->neighborvertex)
-//							{
-//								Vertex * u = g_vertices[uid];
-//
-//								if (u->vertextype == type2)      //如果终点类型是type2
-//								{
-//									AET[vertexid][c_id][i - 1][u->vertexid] += 1;  // 统计appearances
-//								}
-//							}
-//						}
-//					}
-//				}
-//				// ------------------------------------------------------------
-//
-//				// 计算熵
-//				m_GlobalTable[vertexid][3 + 2 * c_id] = AET_getClusterEntropy(vertexid, c_id);
-//			}
-//		}
-//	}
-//}
-//
-//
-//void GameTheory::E_initializeHappyQueue()
-//{
-//	m_happy_queue.clear();  // 初始化
-//
-//	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
-//	{
-//		for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
-//		{
-//			// 处理每个类别
-//			float minCost = 1e8;
-//			for (int c_id = 0; c_id < m_clusters.size(); c_id++)  // 对每个簇
-//			{
-//				// ** 计算代价
-//				float cost_c = getResponsecost(vertexid, c_id);
-//
-//				if (cost_c < minCost)
-//				{
-//					minCost = cost_c;
-//					m_GlobalTable[vertexid][1] = (float)c_id;
-//				}
-//			}
-//
-//			// 处理有效的邻居节点
-//			Vertex * v = g_vertices[vertexid];
-//			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
-//			{
-//				int f = v->neighborvertex[i];  // f is friend of v
-//				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
-//				{
-//					auto iter = m_GlobalTable.find(f);
-//					int f_clusterid = (int)round(iter->second[0]);   // 获取f所在的类别
-//					m_GlobalTable[vertexid][3 + 2 * f_clusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];  // 修改social cost
-//
-//					// ** 计算代价
-//					float cost_c = getResponsecost(vertexid, f_clusterid);
-//					if (cost_c < minCost)
-//					{
-//						minCost = cost_c;
-//						m_GlobalTable[vertexid][1] = (float)f_clusterid;
-//					}
-//				}
-//			}
-//
-//			// 保存 minCost 
-//			m_GlobalTable[vertexid][2] = minCost;
-//
-//			// 如果当前类别和最小代价类别不同，则需要进行调整， 统计需要调整的点
-//			if (m_GlobalTable[vertexid][0] != m_GlobalTable[vertexid][1])
-//			{
-//				m_happy_queue.insert(vertexid);
-//			}
-//		}
-//	}
-//}
-//
-//
-//void GameTheory::E_bestResponseDynamics()
-//{
-//	m_updatetimes = 0;
-//	while (!m_happy_queue.empty())
-//	{
-//		// 获取需要调整的节点
-//		int response_vertexid = *m_happy_queue.begin();
-//		m_happy_queue.erase(m_happy_queue.begin());
-//
-//		m_updatetimes++;  // 统计更新的点的次数
-//
-//		// 进行类别调整与代价更新
-//		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
-//		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
-//
-//		if (currentclusterid == nextclusterid)      // 在本类代价进一步减小的情况
-//			continue;
-//
-//		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // 调整类别
-//
-//		// 从旧类中移除response_vertexid并加入新类
-//		m_clusters[currentclusterid].erase(m_clusters[currentclusterid].find(response_vertexid));
-//		m_clusters[nextclusterid].insert(response_vertexid);
-//
-//		// 根据调整的变化调节其他所有点的 assignment cost
-//		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
-//		{
-//			for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
-//			{
-//				if (vertexid == response_vertexid)  // vertexid自身的 assignment cost 不变
-//					continue;
-//
-//				/*
-//					response_vertexid进行类别调整之后，所有其他点在currentclusterid和nextclusterid的熵都需要重新计算
-//				*/
-//				// 处理旧类, 计算熵之前需要移除response_vertexid
-//				set<int> temp_cluster(m_clusters[currentclusterid]);   // 复制cluster
-//				if (clusterid != currentclusterid)
-//				{
-//					temp_cluster.insert(vertexid);  // vertexid如果不在currentclusterid中，插入
-//				}
-//				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = getClusterEntropy(temp_cluster);   // 更新熵
-//
-//				// 处理新类, 计算熵之前需要添加response_vertexid
-//				set<int> temp_cluster2(m_clusters[nextclusterid]);   // 复制cluster
-//				if (clusterid != nextclusterid)
-//				{
-//					temp_cluster2.insert(vertexid);  // vertexid如果不在nextclusterid中，插入
-//				}
-//				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = getClusterEntropy(temp_cluster2);   // 更新熵
-//
-//				// ** 计算代价
-//				float cost_old = getResponsecost(vertexid, currentclusterid);
-//				float cost_new = getResponsecost(vertexid, nextclusterid);
-//				float cost_c = min(cost_old, cost_new);
-//				if (cost_c < m_GlobalTable[vertexid][2])
-//				{
-//					m_GlobalTable[vertexid][2] = cost_c;
-//					m_GlobalTable[vertexid][1] = (cost_old < cost_new) ? (float)currentclusterid : (float)nextclusterid;
-//					m_happy_queue.insert(vertexid);
-//				}
-//			}
-//		}
-//
-//		// 根据邻居节点调整 social cost
-//		Vertex * v = g_vertices[response_vertexid];
-//		for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
-//		{
-//			int f = v->neighborvertex[i];  // f is friend of v
-//			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
-//			{
-//				// 旧类, 此处代价只会增大，不会有更小的解
-//				m_GlobalTable[f][3 + 2 * currentclusterid + 1] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-//
-//				// 新类
-//				m_GlobalTable[f][3 + 2 * nextclusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-//
-//				// ** 计算代价
-//				float cost_c = getResponsecost(f, nextclusterid);
-//				if (cost_c < m_GlobalTable[f][2])
-//				{
-//					m_GlobalTable[f][2] = cost_c;
-//					m_GlobalTable[f][1] = (float)nextclusterid;
-//					m_happy_queue.insert(f);
-//				}
-//			}
-//		}
-//	}
-//}
-//
-//
-//void GameTheory::AET_bestResponseDynamics()
-//{
-//	m_updatetimes = 0;
-//	while (!m_happy_queue.empty())
-//	{
-//		// 获取需要调整的节点
-//		int response_vertexid = *m_happy_queue.begin();
-//		m_happy_queue.erase(m_happy_queue.begin());
-//
-//		m_updatetimes++;  // 统计更新的点的次数
-//
-//		// 进行类别调整与代价更新
-//		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
-//		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
-//
-//		if (currentclusterid == nextclusterid)      // 在本类代价进一步减小的情况
-//			continue;
-//
-//		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // 调整类别
-//
-//		Vertex * v = g_vertices[response_vertexid];
-//
-//		// 根据调整的变化调节其他所有点的 assignment cost
-//		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
-//		{
-//			for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
-//			{
-//				if (vertexid == response_vertexid)  // vertexid自身的 assignment cost 不变
-//					continue;
-//
-//				/*
-//				更新: response_vertexid进行类别调整之后，所有其他点在currentclusterid和nextclusterid的熵都需要重新计算
-//				*/
-//				for (int ii = v->edgetype_outdegree[STRUCTURE]; ii < v->neighborvertex.size(); ii++)   // 处理属性邻居点
-//				{
-//					int uid = v->neighborvertex[ii];  // 取出该属性邻居点
-//					Vertex * u = g_vertices[uid];
-//
-//					// 处理旧类, 在vertexid对应的currentclusterid的类别中删除response_vertexid产生的appearance
-//					if (AET[vertexid][currentclusterid][u->vertextype - 1][uid] < 2)  // 只有一次appearance, 删除这个键值对
-//						AET[vertexid][currentclusterid][u->vertextype - 1].erase(AET[vertexid][currentclusterid][u->vertextype - 1].find(uid));
-//					else
-//						AET[vertexid][currentclusterid][u->vertextype - 1][uid] -= 1;
-//
-//					// 处理新类, 在vertexid对应的nextclusterid的类别中添加response_vertexid产生的appearance
-//					AET[vertexid][nextclusterid][u->vertextype - 1][uid] += 1;
-//				}
-//
-//				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = AET_getClusterEntropy(vertexid, currentclusterid);  // 旧类
-//				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = AET_getClusterEntropy(vertexid, nextclusterid);        // 新类
-//
-//				// ** 计算代价
-//				float cost_old = getResponsecost(vertexid, currentclusterid);
-//				float cost_new = getResponsecost(vertexid, nextclusterid);
-//				float cost_c = min(cost_old, cost_new);
-//				if (cost_c < m_GlobalTable[vertexid][2])
-//				{
-//					m_GlobalTable[vertexid][2] = cost_c;
-//					m_GlobalTable[vertexid][1] = (cost_old < cost_new) ? (float)currentclusterid : (float)nextclusterid;
-//					m_happy_queue.insert(vertexid);
-//				}
-//			}
-//		}
-//
-//		// 根据邻居节点调整 social cost
-//		for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
-//		{
-//			int f = v->neighborvertex[i];  // f is friend of v
-//			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
-//			{
-//				// 旧类, 此处代价只会增大，不会有更小的解
-//				m_GlobalTable[f][3 + 2 * currentclusterid + 1] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-//
-//				// 新类
-//				m_GlobalTable[f][3 + 2 * nextclusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-//				// ** 计算代价
-//				float cost_c = getResponsecost(f, nextclusterid);
-//				if (cost_c < m_GlobalTable[f][2])
-//				{
-//					m_GlobalTable[f][2] = cost_c;
-//					m_GlobalTable[f][1] = (float)nextclusterid;
-//					m_happy_queue.insert(f);
-//				}
-//			}
-//		}
-//	}
-//}
+void GameTheory::E_buildGlobalTable()
+{
+	// 初始化
+	m_GlobalTable.clear();
+	AET.clear();
+	for (auto v_id : m_valid_cluster_points)
+	{
+		m_GlobalTable.insert(pair<int, vector<float>>(v_id, vector<float>(3 + 2 * m_clusters.size(), 0)));
+		AET.insert(pair<int, vector<vector<unordered_map<int, int>>>>(v_id, vector<vector<unordered_map<int, int>>>
+			(m_clusters.size(), vector<unordered_map<int, int>>(ATTRIBUTE_NUM, unordered_map<int, int>()))));
+	}
+
+	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
+	{
+		for (auto vertexid : m_clusters[clusterid])
+		{
+			// 初始化表头
+			m_GlobalTable[vertexid][0] = (float)clusterid;      // 实际类别
+			m_GlobalTable[vertexid][1] = -1.0f;                 // 最小代价类别
+			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = 无穷大
+
+			// 计算maxSC
+			int valid_neighbor_num = 0;
+			Vertex * v = g_vertices[vertexid];
+			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
+			{
+				int f = v->neighborvertex[i];     // f is a friend of v
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // 邻居点中只选择 valid point
+				{
+					valid_neighbor_num++;
+				}
+			}
+			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // 连边都是同类型的主类节点，并且权重为1，否则需要另行处理
+
+			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // 对每个簇
+			{
+				// 保存maxSC
+				m_GlobalTable[vertexid][3 + 2 * c_id + 1] = maxSC;
+				
+				// 计算当前节点分配到各个簇的熵
+				set<int> temp_cluster(m_clusters[c_id]);   // 复制cluster
+				if (c_id != clusterid)
+					temp_cluster.insert(vertexid);         // 待分配节点加入各个簇中
+
+				// 计算熵
+				//m_GlobalTable[vertexid][3 + 2 * c_id] = getClusterEntropy(temp_cluster);
+			}
+		}
+	}
+}
+
+
+void GameTheory::AET_buildGlobalTable()
+{
+	// 初始化
+	m_GlobalTable.clear();
+	AET.clear();
+	for (auto v_id : m_valid_cluster_points)
+	{
+		m_GlobalTable.insert(pair<int, vector<float>>(v_id, vector<float>(3 + 2 * m_clusters.size(), 0)));
+		AET.insert(pair<int, vector<vector<unordered_map<int, int>>>>(v_id, vector<vector<unordered_map<int, int>>>
+			(m_clusters.size(), vector<unordered_map<int, int>>(ATTRIBUTE_NUM, unordered_map<int, int>()))));
+	}
+
+	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
+	{
+		for (auto vertexid : m_clusters[clusterid])
+		{
+			// 初始化表头
+			m_GlobalTable[vertexid][0] = (float)clusterid;      // 实际类别
+			m_GlobalTable[vertexid][1] = -1.0f;                 // 最小代价类别
+			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = 无穷大
+
+			// 计算maxSC
+			int valid_neighbor_num = 0;
+			Vertex * v = g_vertices[vertexid];
+			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
+			{
+				int f = v->neighborvertex[i];     // f is a friend of v
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // 邻居点中只选择 valid point
+				{
+					valid_neighbor_num++;
+				}
+			}
+			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // 连边都是同类型的主类节点，并且权重为1，否则需要另行处理
+
+			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // 对每个簇
+			{
+				// 保存maxSC
+				m_GlobalTable[vertexid][3 + 2 * c_id + 1] = maxSC;
+
+				// 计算当前节点分配到各个簇的熵
+				set<int> temp_cluster(m_clusters[c_id]);   // 复制cluster
+				if (c_id != clusterid)
+					temp_cluster.insert(vertexid);         // 待分配节点加入各个簇中
+
+				// 构建appearances表
+				// ------------------------------------------------------------
+				for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
+				{
+					int type1 = STRUCTURE;
+					int type2 = i;
+
+					//枚举簇里面的每一个点作为源点
+					for (int vid : temp_cluster)
+					{
+						Vertex * v = g_vertices[vid];
+
+						if (v->vertextype == type1)             //如果该点属于type1
+						{
+							//枚举这个点能到达的其他点
+							for (auto & uid : v->neighborvertex)
+							{
+								Vertex * u = g_vertices[uid];
+
+								if (u->vertextype == type2)      //如果终点类型是type2
+								{
+									AET[vertexid][c_id][i - 1][u->vertexid] += 1;  // 统计appearances
+								}
+							}
+						}
+					}
+				}
+				// ------------------------------------------------------------
+
+				// 计算熵
+				m_GlobalTable[vertexid][3 + 2 * c_id] = AET_getClusterEntropy(vertexid, c_id);
+			}
+		}
+	}
+}
+
+
+void GameTheory::E_initializeHappyQueue()
+{
+	swap(m_happy_queue, stack<int>());  // 清空队列  
+
+	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
+	{
+		for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
+		{
+			// 处理每个类别
+			float minCost = 1e8;
+			for (int c_id = 0; c_id < m_clusters.size(); c_id++)  // 对每个簇
+			{
+				// ** 计算代价
+				float cost_c = getResponsecost(vertexid, c_id);
+
+				if (cost_c < minCost)
+				{
+					minCost = cost_c;
+					m_GlobalTable[vertexid][1] = (float)c_id;
+				}
+			}
+
+			// 处理有效的邻居节点
+			Vertex * v = g_vertices[vertexid];
+			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
+			{
+				int f = v->neighborvertex[i];  // f is friend of v
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
+				{
+					auto iter = m_GlobalTable.find(f);
+					int f_clusterid = (int)round(iter->second[0]);   // 获取f所在的类别
+					m_GlobalTable[vertexid][3 + 2 * f_clusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];  // 修改social cost
+
+					// ** 计算代价
+					float cost_c = getResponsecost(vertexid, f_clusterid);
+					if (cost_c < minCost)
+					{
+						minCost = cost_c;
+						m_GlobalTable[vertexid][1] = (float)f_clusterid;
+					}
+				}
+			}
+
+			// 保存 minCost 
+			m_GlobalTable[vertexid][2] = minCost;
+
+			// 如果当前类别和最小代价类别不同，则需要进行调整， 统计需要调整的点
+			if (m_GlobalTable[vertexid][0] != m_GlobalTable[vertexid][1])
+			{
+				m_happy_queue.push(vertexid);
+			}
+		}
+	}
+}
+
+
+void GameTheory::E_bestResponseDynamics()
+{
+	m_updatetimes = 0;
+	while (!m_happy_queue.empty())
+	{
+		// 获取需要调整的节点
+		int response_vertexid = m_happy_queue.top();
+		m_happy_queue.pop();
+
+		m_updatetimes++;  // 统计更新的点的次数
+
+		// 进行类别调整与代价更新
+		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
+		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
+
+		if (currentclusterid == nextclusterid)      // 在本类代价进一步减小的情况
+			continue;
+
+		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // 调整类别
+
+		// 从旧类中移除response_vertexid并加入新类
+		m_clusters[currentclusterid].erase(m_clusters[currentclusterid].find(response_vertexid));
+		m_clusters[nextclusterid].insert(response_vertexid);
+
+		// 根据调整的变化调节其他所有点的 assignment cost
+		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
+		{
+			for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
+			{
+				if (vertexid == response_vertexid)  // vertexid自身的 assignment cost 不变
+					continue;
+
+				/*
+					response_vertexid进行类别调整之后，所有其他点在currentclusterid和nextclusterid的熵都需要重新计算
+				*/
+				// 处理旧类, 计算熵之前需要移除response_vertexid
+				set<int> temp_cluster(m_clusters[currentclusterid]);   // 复制cluster
+				if (clusterid != currentclusterid)
+				{
+					temp_cluster.insert(vertexid);  // vertexid如果不在currentclusterid中，插入
+				}
+				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = getClusterEntropy(temp_cluster);   // 更新熵
+
+				// 处理新类, 计算熵之前需要添加response_vertexid
+				set<int> temp_cluster2(m_clusters[nextclusterid]);   // 复制cluster
+				if (clusterid != nextclusterid)
+				{
+					temp_cluster2.insert(vertexid);  // vertexid如果不在nextclusterid中，插入
+				}
+				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = getClusterEntropy(temp_cluster2);   // 更新熵
+
+				// ** 计算代价
+				float cost_old = getResponsecost(vertexid, currentclusterid);
+				float cost_new = getResponsecost(vertexid, nextclusterid);
+				float cost_c = min(cost_old, cost_new);
+				if (cost_c < m_GlobalTable[vertexid][2])
+				{
+					m_GlobalTable[vertexid][2] = cost_c;
+					m_GlobalTable[vertexid][1] = (cost_old < cost_new) ? (float)currentclusterid : (float)nextclusterid;
+					m_happy_queue.push(vertexid);
+				}
+			}
+		}
+
+		// 根据邻居节点调整 social cost
+		Vertex * v = g_vertices[response_vertexid];
+		for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
+		{
+			int f = v->neighborvertex[i];  // f is friend of v
+			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
+			{
+				// 旧类, 此处代价只会增大，不会有更小的解
+				m_GlobalTable[f][3 + 2 * currentclusterid + 1] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
+
+				// 新类
+				m_GlobalTable[f][3 + 2 * nextclusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
+
+				// ** 计算代价
+				float cost_c = getResponsecost(f, nextclusterid);
+				if (cost_c < m_GlobalTable[f][2])
+				{
+					m_GlobalTable[f][2] = cost_c;
+					m_GlobalTable[f][1] = (float)nextclusterid;
+					m_happy_queue.push(f);
+				}
+			}
+		}
+	}
+}
+
+
+void GameTheory::AET_bestResponseDynamics()
+{
+	m_updatetimes = 0;
+	while (!m_happy_queue.empty())
+	{
+		// 获取需要调整的节点
+		int response_vertexid = m_happy_queue.top();
+		m_happy_queue.pop();
+
+		m_updatetimes++;  // 统计更新的点的次数
+
+		// 进行类别调整与代价更新
+		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
+		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
+
+		if (currentclusterid == nextclusterid)      // 在本类代价进一步减小的情况
+			continue;
+
+		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // 调整类别
+
+		Vertex * v = g_vertices[response_vertexid];
+
+		// 根据调整的变化调节其他所有点的 assignment cost
+		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
+		{
+			for (auto vertexid : m_clusters[clusterid])  // 遍历所有节点
+			{
+				if (vertexid == response_vertexid)  // vertexid自身的 assignment cost 不变
+					continue;
+
+				/*
+				更新: response_vertexid进行类别调整之后，所有其他点在currentclusterid和nextclusterid的熵都需要重新计算
+				*/
+				for (int ii = v->edgetype_outdegree[STRUCTURE]; ii < v->neighborvertex.size(); ii++)   // 处理属性邻居点
+				{
+					int uid = v->neighborvertex[ii];  // 取出该属性邻居点
+					Vertex * u = g_vertices[uid];
+
+					// 处理旧类, 在vertexid对应的currentclusterid的类别中删除response_vertexid产生的appearance
+					if (AET[vertexid][currentclusterid][u->vertextype - 1][uid] < 2)  // 只有一次appearance, 删除这个键值对
+						AET[vertexid][currentclusterid][u->vertextype - 1].erase(AET[vertexid][currentclusterid][u->vertextype - 1].find(uid));
+					else
+						AET[vertexid][currentclusterid][u->vertextype - 1][uid] -= 1;
+
+					// 处理新类, 在vertexid对应的nextclusterid的类别中添加response_vertexid产生的appearance
+					AET[vertexid][nextclusterid][u->vertextype - 1][uid] += 1;
+				}
+
+				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = AET_getClusterEntropy(vertexid, currentclusterid);  // 旧类
+				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = AET_getClusterEntropy(vertexid, nextclusterid);        // 新类
+
+				// ** 计算代价
+				float cost_old = getResponsecost(vertexid, currentclusterid);
+				float cost_new = getResponsecost(vertexid, nextclusterid);
+				float cost_c = min(cost_old, cost_new);
+				if (cost_c < m_GlobalTable[vertexid][2])
+				{
+					m_GlobalTable[vertexid][2] = cost_c;
+					m_GlobalTable[vertexid][1] = (cost_old < cost_new) ? (float)currentclusterid : (float)nextclusterid;
+					m_happy_queue.push(vertexid);
+				}
+			}
+		}
+
+		// 根据邻居节点调整 social cost
+		for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
+		{
+			int f = v->neighborvertex[i];  // f is friend of v
+			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // 邻居点中只选择 valid point
+			{
+				// 旧类, 此处代价只会增大，不会有更小的解
+				m_GlobalTable[f][3 + 2 * currentclusterid + 1] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
+
+				// 新类
+				m_GlobalTable[f][3 + 2 * nextclusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
+				// ** 计算代价
+				float cost_c = getResponsecost(f, nextclusterid);
+				if (cost_c < m_GlobalTable[f][2])
+				{
+					m_GlobalTable[f][2] = cost_c;
+					m_GlobalTable[f][1] = (float)nextclusterid;
+					m_happy_queue.push(f);
+				}
+			}
+		}
+	}
+}
 
 
 void GameTheory::gatherClusterResult()
@@ -988,23 +801,19 @@ void GameTheory::gameTheoryModulation()
 	// 1. assignment cost == ppr
 	// --------------------------------------------------
 	buildGlobalTable();        // 构建 Global Table, 计算 cN
-	//initializeHappyQueue();    // 初始化 happy_queue
 	bestResponseDynamics();    // best-response dynamics
-	// --------------------------------------------------
 
 	// 2. assignment cost = entropy
 	// --------------------------------------------------
 	//E_buildGlobalTable();        // 构建 Global Table, 计算 cN
 	//E_initializeHappyQueue();    // 初始化 happy_queue
 	//E_bestResponseDynamics();    // best-response dynamics
-	// --------------------------------------------------
 
 	// 3. assignment cost = entropy(使用Appearance Entropy Table)
 	// --------------------------------------------------
 	//AET_buildGlobalTable();        // 构建 Global Table, 计算 cN
 	//E_initializeHappyQueue();      // 初始化 happy_queue(与方案2相同)
 	//AET_bestResponseDynamics();    // best-response dynamics(AET优化方案)
-	// --------------------------------------------------
 
 	// 重新统计聚类结果
 	gatherClusterResult();
@@ -1018,8 +827,6 @@ void GameTheory::execute()
 	string cluster_output = g_resultpath + "cluster_result_" + to_string(g_datasetid) + "_" + to_string(g_schemeid) + "_"
 		+ to_string(g_delta) + "_" + to_string(m_minPts) + "_" + to_string(g_gamma) + "_" + to_string(g_epsilon) + ".txt";
 
-	//string cluster_output = "F:\\WorkSpace\\GraphClustering\\GC_ApproximateReversePush\\x64\\Release\\2.txt";
-
 	ofstream log_ou;
 	log_ou.open(result_output, ios::app);
 
@@ -1031,9 +838,11 @@ void GameTheory::execute()
 
 	log_ou << endl << "********************************" << endl << "GameTheory Approach: " << endl;
 
+	// ====================================== 读图 ======================================
 	readGraph();
 	g_vertexnum = (int)g_vertices.size();
 
+	// ====================================== 迭代计算 ======================================
 	m_cn_flag = true;   // 只计算一次cn
 
 	// 运行时间重复20次取平均值
@@ -1041,7 +850,7 @@ void GameTheory::execute()
 	long long total_running_time = 0;
 	for (int i = 0; i < runTimes; i++)
 	{
-		// 初始化
+		// Initialize
 		diff = 1e10;
 		iterTimes = 0;
 		total_pushback_times = 0;
@@ -1058,20 +867,22 @@ void GameTheory::execute()
 				return;
 			}
 
-			// compute ppr score
+			// Conpute ppr score
 			g_pushbackcount = 0;
 			gameTheory_ReservePush();
 			total_pushback_times += g_pushbackcount;
-			// ----- 对称化 -----
-			SD_PPRSymmetrization();
-			// ----- dbscan -----
+
+			// Symmetrization
+			symmetrizationWithMemory();
+
+			// DBSCAN
 			dbscan();
-			// ========================== Game Theory =============================
+
+			// Game Theory
 			gameTheoryModulation();
 			total_Update_times += m_updatetimes;
-			// ========================== Game Theory =============================
 
-			// ----- 权重更新 -----
+			// Weight update
 			diff = weightUpdate_Entropy();        // 熵（只实现按主类判断）
 			//diff = weightUpdate_Vote();         // 投票（只实现按主类判断）
 		}
@@ -1099,11 +910,7 @@ void GameTheory::execute()
 	// density
 	log_ou << "Cluster_Density: " << clusterEvaluate_Density() << endl;
 	// entropy
-	log_ou << "Cluster_Entropy1: " << clusterEvaluate_Entropy1() << endl;
-	// entropy2
-	//log_ou << "Cluster_Entropy2: " << clusterEvaluate_Entropy2() << endl;
-	// within cluster average distance
-	//log_ou << "Cluster_WithinClusterAveDistance: " << clusterEvaluate_WithinClusterAveDistance() << endl;
+	log_ou << "Cluster_Entropy: " << clusterEvaluate_NormalEntropy() << endl;
 
 	log_ou.close();
 

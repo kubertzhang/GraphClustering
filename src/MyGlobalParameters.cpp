@@ -51,20 +51,20 @@ float g_edgeweight[ATTRIBUTE_BUFF_SIZE][ATTRIBUTE_BUFF_SIZE] =
 	{ 1.0, 0.0, 0.0, 0.0 }
 };
 
-string g_inputpath = "F:\\WorkSpace\\GraphClustering\\GC_ApproximateReversePush\\data\\";
-string g_resultpath = "F:\\WorkSpace\\GraphClustering\\GC_Result\\";
+string g_inputpath = "..\\data\\";
+string g_resultpath = "..\\result\\";
 
-string g_mmfPath = "F:\\WorkSpace\\GraphClustering\\GC_ApproximateReversePush\\data\\PPR\\";
+string g_mmfPath = "..\\blocks\\";
 
 int g_preflag = 0;
 
-// ApproximateReversePush
+// ApproximateReservePush
 unsigned int a_mmf_buffer_size = 0;
 DWORD a_mmfsizehigh = 0;
 DWORD a_mmfsizelow = 0;
 int a_THREADNUM = 0;
 
-// PartialReversePush
+// PartialReservePush
 unsigned int p_mmf_buffer_size = 0;
 DWORD p_mmfsizehigh = 0;
 DWORD p_mmfsizelow = 0;

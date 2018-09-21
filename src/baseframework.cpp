@@ -1,3 +1,4 @@
+#include<Python.h>  // 调用Python
 #include "baseframework.h"
 #include "MyGlobalParameters.h"
 #include <algorithm>
@@ -8,16 +9,16 @@ BaseFramework::BaseFramework(const char * argv[])
 {
 	m_stoc_file = (string)argv[1];
 	m_inputpath = g_inputpath + (string)argv[1];   // 数据集文件
-	// ---------------------------------------------------------------------
-	g_epsilon = (float)atof(argv[2]);  // MAIN 运行时添加
-	g_delta = (float)atof(argv[3]);    // MAIN 运行时添加
-	m_minPts = atoi(argv[4]);          // MAIN 运行时添加
-	//m_minPts = g_minPts;             // PRA  运行时添加
-	// ---------------------------------------------------------------------
+	g_epsilon = (float)atof(argv[2]);  
+	g_delta = (float)atof(argv[3]);    
+	m_minPts = atoi(argv[4]);          
 	g_datasetid = atoi(argv[5]); 
 	g_preflag = atoi(argv[7]);
 	g_gamma = (float)atof(argv[8]);
 
+	g_cluster_startid = 0;
+	g_cluster_endid = 0;
+	 
 	// 选择数据集
 	switch (g_datasetid)   
 	{
@@ -166,7 +167,7 @@ BaseFramework::BaseFramework(const char * argv[])
 	}
 		   break;
 
-	case 5:{	// case study - dblp_cs
+	case 5:{	// dblp_cs
 		ATTRIBUTE_NUM = 3;
 
 		// 指定属性边权重和
@@ -194,7 +195,7 @@ BaseFramework::BaseFramework(const char * argv[])
 	}
 		   break;
 
-	case 6:{      // politics
+	case 6:{      // football
 		ATTRIBUTE_NUM = 2;
 
 		// 指定属性边权重和
@@ -226,9 +227,6 @@ BaseFramework::BaseFramework(const char * argv[])
 		cout << "Get the wrong dataset id!" << endl;
 		break;
 	}
-
-	g_cluster_startid = 0;
-	g_cluster_endid = 0;
 }
 
 
@@ -311,7 +309,7 @@ void BaseFramework::readGraph()
 
 
 // 不保存距离的对称化方式
-void BaseFramework::PPRSymmetrization()
+void BaseFramework::symmetrization()
 {
 	for (auto map_itr = g_dbscanneighborsets.begin(); map_itr != g_dbscanneighborsets.end(); map_itr++)
 	{
@@ -331,7 +329,7 @@ void BaseFramework::PPRSymmetrization()
 
 
 // 保存距离的对称化方式
-void BaseFramework::SD_PPRSymmetrization()
+void BaseFramework::symmetrizationWithMemory()
 {
 	g_dbscanneighborsets.clear();  // 清空
 
@@ -413,7 +411,7 @@ void BaseFramework::dbscan()
 					}
 				}
 
-				if (belonging[p] == -1)                // 该点未被分配，分配到相应的簇中
+				if (belonging[p] == -1)  // 该点未被分配，分配到相应的簇中
 				{
 					belonging[p] = clusterid;
 					cluster.insert(p);
@@ -430,14 +428,14 @@ void BaseFramework::dbscan()
 
 float BaseFramework::getEntropy(set<int> & _cluster, int _type1, int _type2)
 {
-	map<int, int> appearances;        // <节点id, 该节点出现的次数>
+	map<int, int> appearances;   // {节点id : 该节点出现的次数}
 
 	//枚举簇里面的每一个点作为源点
 	for (int vid : _cluster)
 	{
 		Vertex * v = g_vertices[vid];
 
-		if (v->vertextype == _type1)             //如果该点属于type1
+		if (v->vertextype == _type1) //如果该点属于type1
 		{
 			//枚举这个点能到达的其他点
 			for (auto & uid : v->neighborvertex)
@@ -639,7 +637,7 @@ float BaseFramework::clusterEvaluate_Density()
 }
 
 // 普通平均
-float BaseFramework::clusterEvaluate_Entropy1()
+float BaseFramework::clusterEvaluate_NormalEntropy()
 {
 	float total_entropy = 0.0f;
 
@@ -662,7 +660,7 @@ float BaseFramework::clusterEvaluate_Entropy1()
 
 
 // 加权平均
-float BaseFramework::clusterEvaluate_Entropy2()
+float BaseFramework::clusterEvaluate_WeightedEntropy()
 {
 	float total_entropy = 0.0f;
 
@@ -709,14 +707,14 @@ float BaseFramework::clusterEvaluate_WithinClusterAveDistance()
 }
 
 
-//float BaseFramework::clusterEvaluate_NMI()
-//{
-//	// 实现方法参考： https://blog.csdn.net/tobacco5648/article/details/50890106
-//	Py_Initialize();       // 初始化python解释器,告诉编译器要用的python编译器
-//	PyRun_SimpleString("import Py_NMI");           // 调用python文件，python文件要放在和exe执行文件相同目录
-//	PyRun_SimpleString("Py_NMI.printNMI()");       // 调用python文件中的执行函数
-//	Py_Finalize();         // 结束python解释器，释放资源
-//}
+float BaseFramework::clusterEvaluate_NMI()
+{
+	// 实现方法参考： https://blog.csdn.net/tobacco5648/article/details/50890106
+	Py_Initialize();       // 初始化python解释器,告诉编译器要用的python编译器
+	PyRun_SimpleString("import Py_NMI");           // 调用python文件，python文件要放在和exe执行文件相同目录
+	PyRun_SimpleString("Py_NMI.printNMI()");       // 调用python文件中的执行函数
+	Py_Finalize();         // 结束python解释器，释放资源
+}
 
 
 void BaseFramework::storeClusterResult(string _cluster_output)
@@ -739,7 +737,6 @@ void BaseFramework::storeClusterResult(string _cluster_output)
 	//	cluster_ou << endl;
 	//}
 	//cluster_ou << "valid points = " << valid_cluster_points << endl;
-	// -----------------------------------------------------------
 
 	// Case Study
 	// -----------------------------------------------------------
@@ -748,40 +745,13 @@ void BaseFramework::storeClusterResult(string _cluster_output)
 		for (auto vid : cluster)
 		{
 			Vertex * v = g_vertices[vid];
-
 			cluster_ou << v->vertexname << "\t";
-
-			//cluster_ou << vid << "\t";
-
-			//if (g_dbscanneighborsets[vid].size() >= m_minPts)
-			//{
-			//	cluster_ou << "【" << vid << "】" << "\t";
-			//}
-			//else
-			//{
-			//	cluster_ou << vid << "\t";
-			//}
-				
-
-			//cluster_ou << vid << ":" << m_pprDistances[0][vid] << endl;
-
-			//cluster_ou << vid << ":" << g_dbscanneighborsets[vid].size() << "\t";
 		}
 		cluster_ou << endl;
 	}
 
-	//sort(core_point.begin(), core_point.end());
-	//for (int i = 0; i < core_point.size(); i++)
-	//{
-	//	for (int j = 0; j < core_point.size(); j++)
-	//	{
-	//		if (m_pprDistances[core_point[i]][core_point[j]] > g_delta)
-	//			cluster_ou << core_point[i] << "_" << core_point[j] << ": " << m_pprDistances[core_point[i]][core_point[j]] << endl;
-	//	}
-	//}
+	// ppr score
 	// -----------------------------------------------------------
-
-	// 存储距离
 	//for (auto p_map : m_pprDistances)
 	//{
 	//	for (auto dis : p_map.second)

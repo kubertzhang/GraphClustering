@@ -8,9 +8,6 @@
 using namespace std;
 
 
-PartialReversePush::PartialReversePush(const char * argv[]) : BaseFramework(argv){}
-
-
 inline float getTransprob(Vertex * _u, Vertex * _v)
 {
 	float real_total_edgeweight = 0.0f;
@@ -23,7 +20,7 @@ inline float getTransprob(Vertex * _u, Vertex * _v)
 }
 
 
-void PartialReversePush::reversePush_Partial_Encode()
+void PartialReservePush::reservePush_Partial_Encode()
 {
 	//p数组和r数组  此处为所有节点预留空间，但指定聚类类型后只有一部分有值
 	static float * p = new float[g_vertexnum];
@@ -75,7 +72,7 @@ void PartialReversePush::reversePush_Partial_Encode()
 
 			p[uID] += g_alpha * r[uID];    // estimated value
 
-			//遍历u能够到达的点（reverse push）
+			//遍历u能够到达的点（reserve push）
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -191,7 +188,7 @@ void PartialReversePush::reversePush_Partial_Encode()
 }
 
 
-unsigned int __stdcall partialReversePushMultiThreadUpdateFunc(PVOID pM)
+unsigned int __stdcall partialReservePushMultiThreadUpdateFunc(PVOID pM)
 {
 	int taskid = *(int*)pM;
 	SetEvent(g_hThreadEvent); //触发事件
@@ -283,7 +280,7 @@ unsigned int __stdcall partialReversePushMultiThreadUpdateFunc(PVOID pM)
 			g_pr_pool[buffer_id][uID] += g_alpha * g_pr_pool[buffer_id][g_vertexnum + uID];  // estimated value
 			pushback_c++;
 
-			//遍历u能够到达的点（reverse push）
+			//遍历u能够到达的点（reserve push）
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -335,7 +332,7 @@ unsigned int __stdcall partialReversePushMultiThreadUpdateFunc(PVOID pM)
 }
 
  
-void PartialReversePush::partialReversePushMultiThreadUpdate()
+void PartialReservePush::partialReservePushMultiThreadUpdate()
 {
 	g_dbscanneighborsets.clear();   // 初始化
 
@@ -351,7 +348,7 @@ void PartialReversePush::partialReversePushMultiThreadUpdate()
 	{
 		// 等待有空的缓冲区出现
 		WaitForSingleObject(g_hSemaphoreRunnerNum, INFINITE);
-		hThread[i] = (HANDLE)_beginthreadex(NULL, 0, partialReversePushMultiThreadUpdateFunc, &i, 0, NULL);
+		hThread[i] = (HANDLE)_beginthreadex(NULL, 0, partialReservePushMultiThreadUpdateFunc, &i, 0, NULL);
 		WaitForSingleObject(g_hThreadEvent, INFINITE); //等待事件被触发  
 	}
 
@@ -365,7 +362,7 @@ void PartialReversePush::partialReversePushMultiThreadUpdate()
 }
 
 
-void PartialReversePush::execute()
+void PartialReservePush::execute()
 {
 	string result_output = g_resultpath + "result_" + to_string(g_datasetid) + "_" + to_string(g_delta)
 		+ "_" + to_string(m_minPts) + "_" + to_string(g_gamma) + "_" + to_string(g_epsilon) + ".txt";
@@ -385,10 +382,11 @@ void PartialReversePush::execute()
 	readGraph();
 	g_vertexnum = (int)g_vertices.size();
 	cout << "hub points num = " << (g_cluster_endid - g_cluster_startid) << endl;
+
 	// ====================================== 预处理 ====================================== 
 	if (g_preflag)
 	{
-		reversePush_Partial_Encode();   // 压缩
+		reservePush_Partial_Encode();   // 压缩
 		cout << "PreProcess is Completed!" << endl;
 		log_ou << "PreProcess is Completed!" << endl;
 		return;
@@ -399,8 +397,9 @@ void PartialReversePush::execute()
 	pre_file_in.open(pre_file_inputpath, ios::in);
 	pre_file_in >> p_THREADNUM;
 	pre_file_in.close();
+
 	// ====================================== 迭代计算 ======================================
-	// ----- 分配缓冲区空间 -----
+	// 分配缓冲区空间
 	g_buffer_queue.clear();
 	for (int i = 0; i < g_buff_size; i++)
 	{
@@ -414,7 +413,7 @@ void PartialReversePush::execute()
 	long long total_running_time = 0;
 	for (int i = 0; i < runTimes; i++)
 	{
-		// 初始化
+		// Initialize
 		diff = 1e10;
 		iterTimes = 0;
 		total_pushback_times = 0;
@@ -423,21 +422,25 @@ void PartialReversePush::execute()
 		while (diff > 1e-2)
 		{
 			iterTimes++;
+			cout << "iterTimes = " << iterTimes << endl;
 			if (iterTimes > 30)
 			{
 				log_ou << "Can not converge!" << endl;
 				return;
 			}
 
-			// ----- 计算 ppr -----
+			// Conpute ppr score
 			g_pushbackcount = 0;
-			partialReversePushMultiThreadUpdate();
+			partialReservePushMultiThreadUpdate();
 			total_pushback_times += g_pushbackcount;
-			// ----- 对称化 -----
-			PPRSymmetrization();
-			// ----- dbscan -----
+
+			//Symmetrization
+			symmetrization();
+
+			// DBSCAN
 			dbscan();
-			// ----- 权重更新 -----
+
+			// Weight update
 			log_ou << "Current weight: ";
 			for (int i = ATTRIBUTE_1; i <= ATTRIBUTE_NUM; i++)
 			{
@@ -478,17 +481,10 @@ void PartialReversePush::execute()
 	// density
 	log_ou << "Cluster_Density: " << clusterEvaluate_Density() << endl;
 	// entropy
-	log_ou << "Cluster_Entropy1: " << clusterEvaluate_Entropy1() << endl;
-	// entropy2
-	//log_ou << "Cluster_Entropy2: " << clusterEvaluate_Entropy2() << endl;
-	// within cluster average distance
-	//log_ou << "Cluster_WithinClusterAveDistance: " << clusterEvaluate_WithinClusterAveDistance() << endl;
+	log_ou << "Cluster_Entropy: " << clusterEvaluate_NormalEntropy() << endl;
 
 	log_ou.close();
 
 	// 存储聚类结果
 	storeClusterResult(cluster_output);
-	// 存储聚类结果 == 对比SToC
-	//string cluster_output_path = "F:\\WorkSpace\\GraphClustering\\GC_Result\\GT_vs_SToC\\cluster_result_3";
-	//storeClusterResultForComparison(cluster_output_path);
 }

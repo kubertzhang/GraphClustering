@@ -6,9 +6,6 @@
 
 using namespace std;
 
-BaseReversePush::BaseReversePush(const char * argv[]) : BaseFramework(argv){}
-
-
 // 计算转移概率: 可处理非完整图
 inline float getTransprob(Vertex * _u, Vertex * _v)
 {
@@ -22,7 +19,7 @@ inline float getTransprob(Vertex * _u, Vertex * _v)
 }
 
 
-void BaseReversePush::baseReservePush()   // 不保存ppr score
+void BaseReservePush::baseReservePush()
 {
 	g_dbscanneighborsets.clear();  // 初始化
 
@@ -46,7 +43,7 @@ void BaseReversePush::baseReservePush()   // 不保存ppr score
 			p[uID] += g_alpha * r[uID];     // estimated value
 			g_pushbackcount++;
 
-			//遍历u能够到达的点（reverse push）
+			//遍历u能够到达的点（reserve push）
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -76,7 +73,7 @@ void BaseReversePush::baseReservePush()   // 不保存ppr score
 }
 
 
-void BaseReversePush::baseReservePushWithMemory()  // 保存ppr score
+void BaseReservePush::baseReservePushWithMemory()
 {
 	// 初始化
 	m_pprDistances.clear();           
@@ -102,7 +99,7 @@ void BaseReversePush::baseReservePushWithMemory()  // 保存ppr score
 			p[uID] += g_alpha * r[uID];     // estimated value
 			g_pushbackcount++;
 
-			//遍历u能够到达的点（reverse push）
+			//遍历u能够到达的点（reserve push）
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -132,14 +129,12 @@ void BaseReversePush::baseReservePushWithMemory()  // 保存ppr score
 }
 
 
-void BaseReversePush::execute()
+void BaseReservePush::execute()
 {
 	string result_output = g_resultpath + "result_" + to_string(g_datasetid) + "_" + to_string(g_delta) 
 		+ "_" + to_string(m_minPts) + "_" + to_string(g_gamma) + "_" + to_string(g_epsilon) + ".txt";
 	string cluster_output = g_resultpath + "cluster_result_" + to_string(g_datasetid) + "_" + to_string(g_schemeid) + "_"
 		+ to_string(g_delta) + "_" + to_string(m_minPts) + "_" + to_string(g_gamma) + "_" + to_string(g_epsilon) + ".txt";
-
-	//string cluster_output = "F:\\WorkSpace\\GraphClustering\\GC_ApproximateReversePush\\x64\\Release\\1.txt";
 
 	ofstream log_ou;
 	log_ou.open(result_output, ios::app);
@@ -153,14 +148,14 @@ void BaseReversePush::execute()
 	// ====================================== 读图 ======================================
 	readGraph();
 	g_vertexnum = (int)g_vertices.size();
-	// ====================================== 迭代计算 ======================================
 
+	// ====================================== 迭代计算 ======================================
 	// 运行时间重复20次取平均值
 	int runTimes = 1;  // default = 20
 	long long total_running_time = 0;
 	for (int i = 0; i < runTimes; i++)
 	{
-		// 初始化
+		// Initialize
 		diff = 1e10;
 		iterTimes = 0;
 		total_pushback_times = 0;
@@ -176,17 +171,20 @@ void BaseReversePush::execute()
 				return;
 			}
 
-			// 计算 ppr
+			// Conpute ppr score
 			g_pushbackcount = 0;
-			//baseReservePush();
-			baseReservePushWithMemory();
+			baseReservePush();
+			//baseReservePushWithMemory();
 			total_pushback_times += g_pushbackcount;
-			// 对称化
-			//PPRSymmetrization();
-			SD_PPRSymmetrization();
-			// dbscan
+
+			// Symmetrization
+			symmetrization();
+			//symmetrizationWithMemory();
+
+			// DBSCAN
 			dbscan();
-			// 权重更新
+
+			// Weight update
 			log_ou << "Current weight: ";
 			for (int i = ATTRIBUTE_1; i <= ATTRIBUTE_NUM; i++)
 			{
@@ -201,7 +199,7 @@ void BaseReversePush::execute()
 		total_running_time += total_end - total_start;
 	}
 	
-	// ====================================== 统计结果 ======================================
+	// ==================================== 统计结果 ===================================
 	log_ou << "Total runningtime: " << total_running_time / runTimes << endl;
 	log_ou << "Iteration Times: " << iterTimes << endl;
 	log_ou << "Total Pushback Times: " << total_pushback_times << endl;
@@ -219,11 +217,7 @@ void BaseReversePush::execute()
 	// density
 	log_ou << "Cluster_Density: " << clusterEvaluate_Density() << endl;
 	// entropy
-	log_ou << "Cluster_Entropy1: " << clusterEvaluate_Entropy1() << endl;
-	// entropy2
-	//log_ou << "Cluster_Entropy2: " << clusterEvaluate_Entropy2() << endl;
-	// within cluster average distance
-	//log_ou << "Cluster_WithinClusterAveDistance: " << clusterEvaluate_WithinClusterAveDistance() << endl;
+	log_ou << "Cluster_Entropy: " << clusterEvaluate_NormalEntropy() << endl;
 
 	// SToC
 	// --------------------------------------------------------
@@ -237,7 +231,7 @@ void BaseReversePush::execute()
 	//	   << "cluster_amount = " << m_clusters.size() << endl
 	//	   << "valid_cluster_points = " << m_valid_cluster_points.size() << endl
 	//	   << "density = " << clusterEvaluate_Density() << endl
-	//	   << "entropy = " << clusterEvaluate_Entropy1() << endl;
+	//	   << "entropy = " << clusterEvaluate_NormalEntropy() << endl;
 	//log_ou << "-----------------------------------------------------" << endl;
 	// --------------------------------------------------------
 	log_ou.close();

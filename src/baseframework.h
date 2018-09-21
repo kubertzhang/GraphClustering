@@ -1,8 +1,6 @@
 #ifndef BASEFRAMEWORK_H
 #define BASEFRAMEWORK_H
 
-//#include<Python.h>  // 调用Python
-
 #include <string>
 #include <map>
 #include <unordered_map>
@@ -29,8 +27,8 @@ protected:
 	vector<set<int>> m_clusters;					// 聚类结果
 
 	void readGraph();					// 读图
-	void PPRSymmetrization();			// 不保存距离的对称化方式, approximate, partial 方案使用
-	void SD_PPRSymmetrization();		// 保存距离的对称化方式, game theory 方案使用
+	void symmetrization();			// 不保存距离的对称化方式, approximate, partial 方案使用
+	void symmetrizationWithMemory();		// 保存距离的对称化方式, game theory 方案使用
 	void dbscan();						// DBSCAN
 	float getEntropy(set<int> & cluster, int type1, int type2);    // 计算特定类型(type1, type2)的熵
 	float weightUpdate_Entropy();                                  // 基于熵的权重更新方法
@@ -42,8 +40,8 @@ protected:
 	void getClusterResult(std::string _cluster_result_path);
 
 	float clusterEvaluate_Density();                               // 聚类效果评价 - density
-	float clusterEvaluate_Entropy1();                              // 聚类效果评价 - entropy (直接求平均)
-	float clusterEvaluate_Entropy2();                              // 聚类效果评价 - entropy (加权平均)
+	float clusterEvaluate_NormalEntropy();                              // 聚类效果评价 - entropy (直接求平均)
+	float clusterEvaluate_WeightedEntropy();                              // 聚类效果评价 - entropy (加权平均)
 	float clusterEvaluate_WithinClusterAveDistance();              // 聚类效果评价 - 簇间平均距离
 	float clusterEvaluate_NMI();                                   // 聚类效果评价 - NMI
 
@@ -54,47 +52,51 @@ public:
 
 
 // 基本方案 
-class BaseReversePush : public BaseFramework
+class BaseReservePush : public BaseFramework
 {
 private:
 	void baseReservePush();
 	void baseReservePushWithMemory();
 public:
-	explicit BaseReversePush(const char * argv[]);
-	~BaseReversePush(){}
+	explicit BaseReservePush(const char * argv[]) : BaseFramework(argv){}
+	~BaseReservePush(){}
 	void execute();
 };
 
 
 // 近似计算方案
-class ApproximateReversePush : public BaseFramework
+class ApproximateReservePush : public BaseFramework
 {
-private:
-	void reversePush_Pre_Encode();
-	void approximateReversePushMultiThreadUpdate();
 public:
-	explicit ApproximateReversePush(const char * argv[]);
-	~ApproximateReversePush(){}
+	explicit ApproximateReservePush(const char * argv[]) : BaseFramework(argv){}
+	~ApproximateReservePush(){}
 	void execute();
+private:
+	void reservePush_Pre_Encode();
+	void approximateReservePushMultiThreadUpdate();
 };
 
 
 // 部分计算方案
-class PartialReversePush : public BaseFramework
+class PartialReservePush : public BaseFramework
 {
-private:
-	void reversePush_Partial_Encode();
-	void partialReversePushMultiThreadUpdate();
 public:
-	explicit PartialReversePush(const char * argv[]);
-	~PartialReversePush(){}
+	explicit PartialReservePush(const char * argv[]) : BaseFramework(argv){}
+	~PartialReservePush(){}
 	void execute();
+private:
+	void reservePush_Partial_Encode();
+	void partialReservePushMultiThreadUpdate();
 };
 
 
 // 博弈论方案
-class GameTheoty : public BaseFramework
+class GameTheory : public BaseFramework
 {
+public:
+	explicit GameTheory(const char * argv[]) : BaseFramework(argv){};
+	~GameTheory(){}
+	void execute();
 private:
 	struct DegreenNode    // 保存节点及其对应的度 
 	{
@@ -143,13 +145,15 @@ private:
 
 	unordered_map<int, set<CostNode>> cost_queue;      // priority queue for cost, ascending order of cost
 
-	//set<DegreenNode> m_happy_queue;                    // store the points to be adjusted, descending order of degree
-	//unordered_set<int> m_happy_queue;                  // store the points to be adjusted, no order
-	//queue<int> m_happy_queue;
-	stack<int> m_happy_queue;
-	float m_cn;                                        // 归一化参数(暂不考虑)
-	int m_updatetimes;                                 // update points times per iteration
-	bool m_cn_flag;                                    // 是否计算并使用归一化参数
+	//set<DegreenNode> m_happy_queue;       // store candidate points - descending order of degree
+	//unordered_set<int> m_happy_queue;     // store candidate points - no order
+	//queue<int> m_happy_queue;             // store candidate points - first in first out
+	stack<int> m_happy_queue;             // store candidate points - first in last out
+
+	float m_cn;             // 归一化参数(暂不考虑)
+	bool m_cn_flag;         // 是否计算并使用归一化参数
+	int m_updatetimes;      // update points times per iteration
+	
 
 	unordered_map<int, vector<vector<unordered_map<int, int>>>> AET;   // 存储各属性点的出现的次数, 用来优化熵的计算
 	/*            点     簇    属性    点出现次数                */
@@ -176,10 +180,6 @@ private:
 	
 	void gatherClusterResult();       // 收集每轮迭代调整后的结果
 	void gameTheoryModulation();      // 博弈论优化算法
-public:
-	explicit GameTheoty(const char * argv[]);
-	~GameTheoty(){}
-	void execute();
 };
 
 #endif

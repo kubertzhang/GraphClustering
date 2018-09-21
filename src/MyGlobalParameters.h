@@ -23,10 +23,10 @@ extern int ATTRIBUTE_NUM;		 // 属性数目     3				2
 extern int g_clustertype;                            // 聚类类型，默认为STRUCTURE
 extern int g_datasetid;                              // 数据集编号
 extern int g_schemeid;                               // 方案编号
-extern float g_epsilon;                              // reverse push 误差参数
+extern float g_epsilon;                              // reserve push 误差参数
 extern float g_delta;                                // dbscan range
 extern int g_minPts;                                 // dbscan minPts
-extern float g_alpha;                                // reverse push 重启概率
+extern float g_alpha;                                // reserve push 重启概率
 extern float g_gamma;                                // game theory 代价函数参数
 extern int g_cluster_startid;                        // 聚类类型开始节点(包含该点)
 extern int g_cluster_endid;                          // 聚类类型结束节点(包含该点)
@@ -60,13 +60,13 @@ extern string g_resultpath;       // 输出结果文件绝对路径
 extern string g_mmfPath;          // 预存数据保存绝对路径
 extern int g_preflag;             // 是否预处理标记
 
-// ApproximateReversePush
+// ApproximateReservePush
 extern DWORD a_mmfsizehigh;                // 高位文件大小（x4G）
 extern DWORD a_mmfsizelow;                 // 低位文件大小
 extern unsigned int a_mmf_buffer_size;     // 单个映射文件的大小
 extern int a_THREADNUM;                    // 近似方案多线程任务数
 
-// PartialReversePush
+// PartialReservePush
 extern DWORD p_mmfsizehigh;                // 高位文件大小（x4G）
 extern DWORD p_mmfsizelow;                 // 低位文件大小
 extern unsigned int p_mmf_buffer_size;     // 单个映射文件的大小
