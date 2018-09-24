@@ -4,26 +4,21 @@
 
 using namespace std;
 
-
-// Ô­Ê¼mainº¯Êı
-// ===================================================================================================================================
-#define MAIN
-#ifdef MAIN
 int main(int argc, const char * argv[])
 {
 	/*
-		ÃüÁîĞĞ²ÎÊıËµÃ÷£º
-		argv[1] : m_inputpath   Êı¾İ¼¯ÎÄ¼şÃû {dblp_8w.txt, flickr_9w.txt µÈ}
-		argv[2] : g_epsilon     ppr Îó²îÖµ {0.001}
-		argv[3] : g_delta       dbscan ãĞÖµ {0.005}
+		å‘½ä»¤è¡Œå‚æ•°è¯´æ˜ï¼š
+		argv[1] : m_inputpath   æ•°æ®é›†æ–‡ä»¶å {dblp_8w.txt, flickr_9w.txt ç­‰}
+		argv[2] : g_epsilon     ppr è¯¯å·®å€¼ {0.001}
+		argv[3] : g_delta       dbscan é˜ˆå€¼ {0.005}
 		argv[4] : m_minPts      dbscan minPts {4}
-		argv[5] : dataset_id    Êı¾İ¼¯ÀàĞÍ {1 = dblp_8w, 2 = flickr_9w, 3 = dblp_3k, 4 = flickr_4k, 5 = dblp_cs, 6 = football}
-		argv[6] : schemeid      Ëã·¨·½°¸±àºÅ {1 = base, 2 = approximate, 3 = partial, 4 = game theory}
-		argv[7] £ºpre_flag      ÊÇ·ñ½øĞĞÔ¤´¦Àí {0 = no, 1 = yes}
-		argv[8] : g_gamma		²©ŞÄÂÛ´ú¼Ûº¯Êı²ÎÊı {0.5}
+		argv[5] : dataset_id    æ•°æ®é›†ç±»å‹ {1 = dblp_8w, 2 = flickr_9w, 3 = dblp_3k, 4 = flickr_4k, 5 = dblp_cs, 6 = football}
+		argv[6] : schemeid      ç®—æ³•æ–¹æ¡ˆç¼–å· {1 = base, 2 = approximate, 3 = partial, 4 = game theory}
+		argv[7] ï¼špre_flag      æ˜¯å¦è¿›è¡Œé¢„å¤„ç† {0 = no, 1 = yes}
+		argv[8] : g_gamma		åšå¼ˆè®ºä»£ä»·å‡½æ•°å‚æ•° {0.5}
 	*/
 
-	// Ñ¡ÔñÖ¸¶¨·½°¸
+	// é€‰æ‹©æŒ‡å®šæ–¹æ¡ˆ
 	g_schemeid = atoi(argv[6]);
 	switch (g_schemeid)
 	{
@@ -57,130 +52,3 @@ int main(int argc, const char * argv[])
 	}
 	return 0;
 }
-#endif
-
-
-// Ñ¡Ôñ·ûºÏÒªÇóµÄ²ÎÊı
-// ===================================================================================================================================
-//#define PRA
-#ifdef PRA
-
-int main(int argc, const char * argv[])
-{
-	/*
-	ÃüÁîĞĞ²ÎÊıËµÃ÷£º
-	argv[1] : m_inputpath   Êı¾İ¼¯ÎÄ¼şÃû {dblp_8w.txt, flickr_9w.txt µÈ}
-	argv[2] : g_epsilon     ppr Îó²îÖµ {0.001}
-	argv[3] : g_delta       dbscan ãĞÖµ {0.005}
-	argv[4] : m_minPts      dbscan minPts {4}
-	argv[5] : dataset_id    Êı¾İ¼¯ÀàĞÍ {1 = dblp_8w, 2 = flickr_9w, 3 = dblp_3k, 4 = flickr_4k, 5 = case study - dblp_cs, 6 = football}
-	argv[6] : schemeid      Ëã·¨·½°¸±àºÅ {1 = base, 2 = approximate, 3 = partial, 4 = game theory}
-	argv[7] £ºpre_flag      ÊÇ·ñ½øĞĞÔ¤´¦Àí {0 = no, 1 = yes}
-	argv[8] : g_gamma		²©ŞÄÂÛ´ú¼Ûº¯Êı²ÎÊı {0.5}
-	*/
-
-	ofstream nmi_ou;
-	nmi_ou.open("F:\\WorkSpace\\GraphClustering\\GC_ApproximateReservePush\\x64\\Release\\football_nmi_result.txt", ios::app);
-	Py_Initialize();      // ³õÊ¼»¯python½âÊÍÆ÷,¸æËß±àÒëÆ÷ÒªÓÃµÄpython±àÒëÆ÷
-	PyRun_SimpleString("import Py_NMI");         // µ÷ÓÃpythonÎÄ¼ş
-
-	// Éè¶¨²ÎÊıÇø¼ä
-	// ===========
-	// ĞèÒªÔÚbaseframework.cppÖĞ×¢ÊÍÓï¾ä
-	// ===========
-
-	// ApproximateReservePush.exe football.txt 0.001 0.005 4 6 1 0 0.5
-	g_epsilon = 0.001f;
-
-	int ptsNum = 6;
-	int array_minPts[6] = { 3, 4, 5, 6, 7, 8};
-	//int array_minPts[1] = { 4 };
-
-	int scheNum = 1;
-	int array_schemeid[2] = { 4 };
-	//int array_schemeid[2] = { 1, 4 };
-
-	float delta_start = 0.001f;
-	float delta_end = 0.008f;
-	float delta_rate = 0.0002f;
-
-	for (float delta_cur = delta_start; delta_cur <= delta_end; delta_cur += delta_rate)
-	{
-		// 1. ÉèÖÃÁ½¸ö²ÎÊı
-		g_delta = delta_cur;  // ²ÎÊı1
-
-		for (int i = 0; i < ptsNum; i++)
-		{
-			g_minPts = array_minPts[i];  // ²ÎÊı2
-
-			cout << "test : " << "delta = " << g_delta << "\t" << "minPts = " << g_minPts << endl;
-
-			// 2. ¼ÆËãÁ½¸ö·½°¸µÄ½á¹û
-			for (int j = 0; j < scheNum; j++)
-			{
-				g_schemeid = array_schemeid[j];  // Ñ¡ÔñÖ¸¶¨·½°¸
-
-				// ·½°¸Ñ¡ÔñÖ´ĞĞ
-				switch (g_schemeid)
-				{
-				case 1:{
-					// basic 
-					BaseReservePush brp(argv);
-					brp.execute();
-				}
-					   break;
-				case 2:{
-					// approximate
-					ApproximateReservePush arp(argv);
-					arp.execute();
-				}
-					   break;
-				case 3:{
-					// partial
-					PartialReservePush p_pr(argv);
-					p_pr.execute();
-				}
-					   break;
-				case 4:{
-					// game theory
-					GameTheory gt(argv);
-					gt.execute();
-				}
-					   break;
-				default:
-					cout << "Get the wrong scheme id !" << endl;
-					break;
-				}
-			}
-
-			// 3. Ğ§¹ûÆÀ¼Û
-			PyRun_SimpleString("Py_NMI.printNMI()");       // µ÷ÓÃpythonÎÄ¼şÖĞµÄº¯Êı
-			
-			// 4. ½á¹û·ÖÎö
-			ifstream nmi_in;
-			string nmi_r_path = "nmi_result";
-			nmi_in.open(nmi_r_path, ios::in);
-			int nmi_res;
-			float base;
-			float game;
-			nmi_in >> nmi_res;
-			nmi_in >> base;
-			nmi_in >> game;
-			nmi_in.close();
-
-			if (nmi_res)
-			{
-				nmi_ou << "YES" << "\tdelta = " << g_delta << "\tminPts = " << g_minPts << "\tbase = " << base <<  "\tgame = " << game << endl;
-			}
-			else
-			{
-				nmi_ou << "NO" << "\tdelta = " << g_delta << "\tminPts = " << g_minPts << "\tbase = " << base << "\tgame = " << game << endl;
-			}
-		}
-	}
-	nmi_ou.close();
-	Py_Finalize();       // ½áÊøpython½âÊÍÆ÷£¬ÊÍ·Å×ÊÔ´
-	system("pause");
-	return 0;
-}
-#endif
