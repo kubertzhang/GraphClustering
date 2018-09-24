@@ -61,8 +61,8 @@ inline float GameTheory::AET_getClusterEntropy(int _vertexid, int _clusterid)
 	float total_entropy = 0.0f;
 	for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
 	{
-		int total = 0;    // Í³¼ÆÁ¬±ß×ÜÊı
-		for (auto & pair : AET[_vertexid][_clusterid][i - 1])   // ´Ë´¦»¹¿ÉÒÔÔ¤´æ
+		int total = 0;    // ç»Ÿè®¡è¿è¾¹æ€»æ•°
+		for (auto & pair : AET[_vertexid][_clusterid][i - 1])   // æ­¤å¤„è¿˜å¯ä»¥é¢„å­˜
 		{
 			total += pair.second;
 		}
@@ -82,14 +82,14 @@ inline float GameTheory::AET_getClusterEntropy(int _vertexid, int _clusterid)
 
 void GameTheory::gameTheory_ReservePush()
 {
-	m_pprDistances.clear();  // ³õÊ¼»¯
+	m_pprDistances.clear();  // åˆå§‹åŒ–
 
 	for (int targetID = g_cluster_startid; targetID <= g_cluster_endid; targetID++)
 	{
 		vector<float> p(g_vertexnum, 0.0);
 		vector<float> r(g_vertexnum, 0.0);
 
-		set<int> pushback_queue;      // ´æ·Å´øpushbackµÄ½Úµã
+		set<int> pushback_queue;      // å­˜æ”¾å¸¦pushbackçš„èŠ‚ç‚¹
 
 		r[targetID] = 1.0f;   // target point
 		pushback_queue.insert(targetID);
@@ -99,12 +99,12 @@ void GameTheory::gameTheory_ReservePush()
 			int uID = *pushback_queue.begin();
 			pushback_queue.erase(pushback_queue.begin());
 
-			Vertex * u = g_vertices[uID];   // ¶ÁÈ¡´øpushback½ÚµãĞÅÏ¢
+			Vertex * u = g_vertices[uID];   // è¯»å–å¸¦pushbackèŠ‚ç‚¹ä¿¡æ¯
 
 			p[uID] += g_alpha * r[uID];     // estimated value
 			g_pushbackcount++;
 
-			//±éÀúuÄÜ¹»µ½´ïµÄµã£¨reserve push£©
+			//éå†uèƒ½å¤Ÿåˆ°è¾¾çš„ç‚¹ï¼ˆreserve pushï¼‰
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -119,7 +119,7 @@ void GameTheory::gameTheory_ReservePush()
 			r[uID] = 0;
 		}
 
-		// »ñÈ¡¾àÀë
+		// è·å–è·ç¦»
 		map<int, float> m_map;
 		for (int i = g_cluster_startid; i <= g_cluster_endid; i++)
 		{
@@ -137,7 +137,7 @@ void GameTheory::buildGlobalTable()
 {
 	// == Initialize
 	m_GlobalTable.clear();  
-	swap(m_happy_queue, stack<int>());  // Çå¿Õ¶ÓÁĞ  
+	swap(m_happy_queue, stack<int>());  // æ¸…ç©ºé˜Ÿåˆ—  
 	cost_queue.clear();   
 
 	// == Build glable table
@@ -150,23 +150,23 @@ void GameTheory::buildGlobalTable()
 	{
 		for (auto vertexid : m_clusters[clusterid])  
 		{
-			// ³õÊ¼»¯±íÍ·
-			m_GlobalTable[vertexid][0] = (float)clusterid;      // Êµ¼ÊÀà±ğ                 
+			// åˆå§‹åŒ–è¡¨å¤´
+			m_GlobalTable[vertexid][0] = (float)clusterid;      // å®é™…ç±»åˆ«                 
 
-			// ¼ÆËãmaxSC
+			// è®¡ç®—maxSC
 			int valid_neighbor_num = 0;
 			Vertex * v = g_vertices[vertexid];
 			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
 			{
 				int f = v->neighborvertex[i];     // f is a friend of v
-				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // ÁÚ¾ÓµãÖĞÖ»Ñ¡Ôñ valid point
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // é‚»å±…ç‚¹ä¸­åªé€‰æ‹© valid point
 				{
 					valid_neighbor_num++;
 				}
 			}
-			m_GlobalTable[vertexid][2] = (float)valid_neighbor_num;    // ½ÚµãµÄ¶È
-			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // Á¬±ß¶¼ÊÇÍ¬ÀàĞÍµÄÖ÷Àà½Úµã£¬²¢ÇÒÈ¨ÖØÎª1£¬·ñÔòĞèÒªÁíĞĞ´¦Àí
-			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // ¶ÔÃ¿¸ö´Ø
+			m_GlobalTable[vertexid][2] = (float)valid_neighbor_num;    // èŠ‚ç‚¹çš„åº¦
+			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // è¿è¾¹éƒ½æ˜¯åŒç±»å‹çš„ä¸»ç±»èŠ‚ç‚¹ï¼Œå¹¶ä¸”æƒé‡ä¸º1ï¼Œå¦åˆ™éœ€è¦å¦è¡Œå¤„ç†
+			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // å¯¹æ¯ä¸ªç°‡
 			{
 				m_GlobalTable[vertexid][3 + 3 * c_id + 2] = maxSC;
 			}
@@ -183,11 +183,11 @@ void GameTheory::buildGlobalTable()
 			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
 			{
 				int f = v->neighborvertex[i];  // f is friend of v
-				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // ÁÚ¾ÓµãÖĞÖ»Ñ¡Ôñ valid point
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // é‚»å±…ç‚¹ä¸­åªé€‰æ‹© valid point
 				{
 					auto iter = m_GlobalTable.find(f);
-					int f_clusterid = (int)round(iter->second[0]);   // »ñÈ¡fËùÔÚµÄÀà±ğ
-					m_GlobalTable[vertexid][3 + 3 * f_clusterid + 2] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];  // ĞŞ¸Äsocial cost
+					int f_clusterid = (int)round(iter->second[0]);   // è·å–fæ‰€åœ¨çš„ç±»åˆ«
+					m_GlobalTable[vertexid][3 + 3 * f_clusterid + 2] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];  // ä¿®æ”¹social cost
 				}
 			}
 
@@ -196,18 +196,18 @@ void GameTheory::buildGlobalTable()
 			{
 				int dis_id = dis_map.first;
 
-				if (dis_id == vertexid)  // ¾àÀë¼¯ºÏÖĞ°üº¬×ÔÉí£¬È¥µô
+				if (dis_id == vertexid)  // è·ç¦»é›†åˆä¸­åŒ…å«è‡ªèº«ï¼Œå»æ‰
 					continue;
 
 				if (m_valid_cluster_points.find(dis_id) != m_valid_cluster_points.end())
 				{
-					int dis_clusterid = (int)round(m_GlobalTable[dis_id][0]);               // ²éÕÒ¸ÃµãËùÔÚµÄÀà±ğ
+					int dis_clusterid = (int)round(m_GlobalTable[dis_id][0]);               // æŸ¥æ‰¾è¯¥ç‚¹æ‰€åœ¨çš„ç±»åˆ«
 					m_GlobalTable[vertexid][3 + 3 * dis_clusterid] += 1;                    // num
 					m_GlobalTable[vertexid][3 + 3 * dis_clusterid + 1] += dis_map.second;   // sum
 				}
 			}
 
-			// ´æ´¢´ú¼ÛÓëÀà±ğ
+			// å­˜å‚¨ä»£ä»·ä¸ç±»åˆ«
 			set<CostNode> ss;
 			for (int c_id = 0; c_id < m_clusters.size(); c_id++)
 			{
@@ -216,9 +216,9 @@ void GameTheory::buildGlobalTable()
 
 			cost_queue.insert(pair<int, set<CostNode>>(vertexid, ss));
 
-			m_GlobalTable[vertexid][1] = (float)(ss.begin()->s_clusterid);       // ´æ´¢×îĞ¡´ú¼ÛÀà±ğ
+			m_GlobalTable[vertexid][1] = (float)(ss.begin()->s_clusterid);       // å­˜å‚¨æœ€å°ä»£ä»·ç±»åˆ«
 
-			// Èç¹ûµ±Ç°Àà±ğºÍ×îĞ¡´ú¼ÛÀà±ğ²»Í¬£¬ÔòĞèÒª½øĞĞµ÷Õû£¬ ½«ĞèÒªµ÷ÕûµÄµã·ÅÈëhappy queue
+			// å¦‚æœå½“å‰ç±»åˆ«å’Œæœ€å°ä»£ä»·ç±»åˆ«ä¸åŒï¼Œåˆ™éœ€è¦è¿›è¡Œè°ƒæ•´ï¼Œ å°†éœ€è¦è°ƒæ•´çš„ç‚¹æ”¾å…¥happy queue
 			if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))
 			{
 				m_happy_queue.push(vertexid);
@@ -235,10 +235,10 @@ void GameTheory::buildGlobalTable()
 
 		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
 		{
-			for (auto vertexid : m_clusters[clusterid])  // ±éÀúËùÓĞ½Úµã
+			for (auto vertexid : m_clusters[clusterid])  // éå†æ‰€æœ‰èŠ‚ç‚¹
 			{
 				float max_ac = 1e8f;    // maximum ppr distance 
-				for (int c_id = 0; c_id < m_clusters.size(); c_id++)  // ¶ÔÃ¿¸ö´Ø
+				for (int c_id = 0; c_id < m_clusters.size(); c_id++)  // å¯¹æ¯ä¸ªç°‡
 				{
 					if (m_GlobalTable[vertexid][3 + 3 * c_id] > 0)
 					{
@@ -257,7 +257,7 @@ void GameTheory::buildGlobalTable()
 		}
 
 		float average_degree = (float)sum_degree / ccount;
-		float average_weight = 1.0f;          // Á¬±ß¶¼ÊÇÍ¬ÀàĞÍµÄÖ÷Àà½Úµã£¬²¢ÇÒÈ¨ÖØÎª1£¬·ñÔòĞèÒªÁíĞĞ´¦Àí       
+		float average_weight = 1.0f;          // è¿è¾¹éƒ½æ˜¯åŒç±»å‹çš„ä¸»ç±»èŠ‚ç‚¹ï¼Œå¹¶ä¸”æƒé‡ä¸º1ï¼Œå¦åˆ™éœ€è¦å¦è¡Œå¤„ç†       
 		float average_max_ppr_dist = sum_max_ppr_dist / ccount;
 		m_cn = average_degree * average_weight / (2.0f * average_max_ppr_dist * (float)sqrt(m_clusters.size()));
 		m_cn_flag = false;
@@ -268,26 +268,26 @@ void GameTheory::buildGlobalTable()
 
 void GameTheory::bestResponseDynamics()
 {
-	m_updatetimes = 0;    // ³õÊ¼»¯
+	m_updatetimes = 0;    // åˆå§‹åŒ–
 
 	while (!m_happy_queue.empty())
 	{
-		// »ñÈ¡ĞèÒªµ÷ÕûµÄ½Úµã
+		// è·å–éœ€è¦è°ƒæ•´çš„èŠ‚ç‚¹
 		int response_vertexid = m_happy_queue.top();
 		m_happy_queue.pop();
 
-		m_updatetimes++;  // Í³¼Æ¸üĞÂµÄµãµÄ´ÎÊı
+		m_updatetimes++;  // ç»Ÿè®¡æ›´æ–°çš„ç‚¹çš„æ¬¡æ•°
 
-		// ½øĞĞÀà±ğµ÷ÕûÓë´ú¼Û¸üĞÂ
+		// è¿›è¡Œç±»åˆ«è°ƒæ•´ä¸ä»£ä»·æ›´æ–°
 		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
 		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
 
-		if (currentclusterid == nextclusterid)      // ÔÚ±¾Àà´ú¼Û½øÒ»²½¼õĞ¡µÄÇé¿ö
+		if (currentclusterid == nextclusterid)      // åœ¨æœ¬ç±»ä»£ä»·è¿›ä¸€æ­¥å‡å°çš„æƒ…å†µ
 			continue;
 
-		m_GlobalTable[response_vertexid][0] = m_GlobalTable[response_vertexid][1];  // µ÷ÕûÀà±ğ
+		m_GlobalTable[response_vertexid][0] = m_GlobalTable[response_vertexid][1];  // è°ƒæ•´ç±»åˆ«
 
-		/*ËùÓĞµÄ½ÚµãµÄ´ú¼ÛÔÚÇÒ½öÔÚcurrentclusteridºÍnextclusterid·¢Éú±ä»¯*/
+		/*æ‰€æœ‰çš„èŠ‚ç‚¹çš„ä»£ä»·åœ¨ä¸”ä»…åœ¨currentclusteridå’Œnextclusteridå‘ç”Ÿå˜åŒ–*/
 
 		// adjust social cost
 		Vertex * v = g_vertices[response_vertexid];
@@ -299,18 +299,18 @@ void GameTheory::bestResponseDynamics()
 				// old cluster
 				if ((int)round(m_GlobalTable[f][0]) == currentclusterid)  
 				{
-					// ´¦Àí response_vertexid µÄ social cost
+					// å¤„ç† response_vertexid çš„ social cost
 					m_GlobalTable[response_vertexid][3 + 3 * currentclusterid + 2] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-					// ´¦ÀíÁÚ¾Ó½ÚµãµÄ social cost
+					// å¤„ç†é‚»å±…èŠ‚ç‚¹çš„ social cost
 					m_GlobalTable[f][3 + 3 * currentclusterid + 2] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
 				}
 
 				// new cluster
 				if ((int)round(m_GlobalTable[f][0]) == nextclusterid)
 				{
-					// ´¦Àí response_vertexid µÄ social cost
+					// å¤„ç† response_vertexid çš„ social cost
 					m_GlobalTable[response_vertexid][3 + 3 * nextclusterid + 2] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-					// ´¦ÀíÁÚ¾Ó½ÚµãµÄ social cost
+					// å¤„ç†é‚»å±…èŠ‚ç‚¹çš„ social cost
 					m_GlobalTable[f][3 + 3 * nextclusterid + 2] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
 				}	
 			}
@@ -324,7 +324,7 @@ void GameTheory::bestResponseDynamics()
 				float cur_cost = 1e8;
 				float next_cost = 1e8;
 				
-				if (vertexid == response_vertexid)     // response_vertexid ×ÔÉíµÄ assignment cost ²»±ä
+				if (vertexid == response_vertexid)     // response_vertexid è‡ªèº«çš„ assignment cost ä¸å˜
 				{
 					for (auto c_n : cost_queue[vertexid]) 
 					{
@@ -338,14 +338,14 @@ void GameTheory::bestResponseDynamics()
 					}
 
 					// old cluster
-					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(currentclusterid, cur_cost)));                 // É¾³ı¾ÉµÄ´ú¼Û
-					cost_queue[vertexid].insert(CostNode(currentclusterid, getResponsecost(vertexid, currentclusterid)));        // ²åÈëĞÂµÄ´ú¼Û
+					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(currentclusterid, cur_cost)));                 // åˆ é™¤æ—§çš„ä»£ä»·
+					cost_queue[vertexid].insert(CostNode(currentclusterid, getResponsecost(vertexid, currentclusterid)));        // æ’å…¥æ–°çš„ä»£ä»·
 					// new cluster
-					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(nextclusterid, next_cost)));                 // É¾³ı¾ÉµÄ´ú¼Û
-					cost_queue[vertexid].insert(CostNode(nextclusterid, getResponsecost(vertexid, nextclusterid)));            // ²åÈëĞÂµÄ´ú¼Û
+					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(nextclusterid, next_cost)));                 // åˆ é™¤æ—§çš„ä»£ä»·
+					cost_queue[vertexid].insert(CostNode(nextclusterid, getResponsecost(vertexid, nextclusterid)));            // æ’å…¥æ–°çš„ä»£ä»·
 
 					m_GlobalTable[vertexid][1] = (float)(cost_queue[vertexid].begin())->s_clusterid;
-					if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))  // ĞèÒª½øĞĞÀà±ğ¸üĞÂ
+					if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))  // éœ€è¦è¿›è¡Œç±»åˆ«æ›´æ–°
 					{
 						m_happy_queue.push(vertexid);
 					}
@@ -354,11 +354,11 @@ void GameTheory::bestResponseDynamics()
 				}
 					
 				/*
-				response_vertexidµ÷Õû, ÆäËûvertexidµÄcurrentclusterid´¦µÄassignment cost¿ÉÄÜ·¢Éú±ä»¯
-				Èç¹ûvertexidºÍresponse_vertexidÖ®¼äµÄppr score > 0, Ôò»áÒıÆğassignment costµÄ±ä»¯, ½øĞĞµ÷Õû; ·ñÔò, ²»½øĞĞµ÷Õû
+				response_vertexidè°ƒæ•´, å…¶ä»–vertexidçš„currentclusteridå¤„çš„assignment costå¯èƒ½å‘ç”Ÿå˜åŒ–
+				å¦‚æœvertexidå’Œresponse_vertexidä¹‹é—´çš„ppr score > 0, åˆ™ä¼šå¼•èµ·assignment costçš„å˜åŒ–, è¿›è¡Œè°ƒæ•´; å¦åˆ™, ä¸è¿›è¡Œè°ƒæ•´
 				*/
 				
-				if (m_pprDistances[vertexid].find(response_vertexid) != m_pprDistances[vertexid].end())   // vertexid ºÍ response_vertexid Ö®¼äµÄ ppr > 0
+				if (m_pprDistances[vertexid].find(response_vertexid) != m_pprDistances[vertexid].end())   // vertexid å’Œ response_vertexid ä¹‹é—´çš„ ppr > 0
 				{
 					for (auto c_n : cost_queue[vertexid])
 					{
@@ -375,19 +375,19 @@ void GameTheory::bestResponseDynamics()
 					m_GlobalTable[vertexid][3 + 3 * currentclusterid] -= 1;
 					m_GlobalTable[vertexid][3 + 3 * currentclusterid + 1] -= m_pprDistances[vertexid][response_vertexid];
 
-					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(currentclusterid, cur_cost)));                 // É¾³ı¾ÉµÄ´ú¼Û
-					cost_queue[vertexid].insert(CostNode(currentclusterid, getResponsecost(vertexid, currentclusterid)));        // ²åÈëĞÂµÄ´ú¼Û
+					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(currentclusterid, cur_cost)));                 // åˆ é™¤æ—§çš„ä»£ä»·
+					cost_queue[vertexid].insert(CostNode(currentclusterid, getResponsecost(vertexid, currentclusterid)));        // æ’å…¥æ–°çš„ä»£ä»·
 
 					// new cluster
 					m_GlobalTable[vertexid][3 + 3 * nextclusterid] += 1;
 					m_GlobalTable[vertexid][3 + 3 * nextclusterid + 1] += m_pprDistances[vertexid][response_vertexid];
 
-					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(nextclusterid, next_cost)));                 // É¾³ı¾ÉµÄ´ú¼Û
-					cost_queue[vertexid].insert(CostNode(nextclusterid, getResponsecost(vertexid, nextclusterid)));            // ²åÈëĞÂµÄ´ú¼Û
+					cost_queue[vertexid].erase(cost_queue[vertexid].find(CostNode(nextclusterid, next_cost)));                 // åˆ é™¤æ—§çš„ä»£ä»·
+					cost_queue[vertexid].insert(CostNode(nextclusterid, getResponsecost(vertexid, nextclusterid)));            // æ’å…¥æ–°çš„ä»£ä»·
 				}
 
 				m_GlobalTable[vertexid][1] = (float)(cost_queue[vertexid].begin())->s_clusterid;
-				if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))  // ĞèÒª½øĞĞÀà±ğ¸üĞÂ
+				if ((int)round(m_GlobalTable[vertexid][0]) != (int)round(m_GlobalTable[vertexid][1]))  // éœ€è¦è¿›è¡Œç±»åˆ«æ›´æ–°
 				{
 					m_happy_queue.push(vertexid);
 				}
@@ -399,7 +399,7 @@ void GameTheory::bestResponseDynamics()
 
 void GameTheory::E_buildGlobalTable()
 {
-	// ³õÊ¼»¯
+	// åˆå§‹åŒ–
 	m_GlobalTable.clear();
 	AET.clear();
 	for (auto v_id : m_valid_cluster_points)
@@ -413,35 +413,35 @@ void GameTheory::E_buildGlobalTable()
 	{
 		for (auto vertexid : m_clusters[clusterid])
 		{
-			// ³õÊ¼»¯±íÍ·
-			m_GlobalTable[vertexid][0] = (float)clusterid;      // Êµ¼ÊÀà±ğ
-			m_GlobalTable[vertexid][1] = -1.0f;                 // ×îĞ¡´ú¼ÛÀà±ğ
-			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = ÎŞÇî´ó
+			// åˆå§‹åŒ–è¡¨å¤´
+			m_GlobalTable[vertexid][0] = (float)clusterid;      // å®é™…ç±»åˆ«
+			m_GlobalTable[vertexid][1] = -1.0f;                 // æœ€å°ä»£ä»·ç±»åˆ«
+			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = æ— ç©·å¤§
 
-			// ¼ÆËãmaxSC
+			// è®¡ç®—maxSC
 			int valid_neighbor_num = 0;
 			Vertex * v = g_vertices[vertexid];
 			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
 			{
 				int f = v->neighborvertex[i];     // f is a friend of v
-				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // ÁÚ¾ÓµãÖĞÖ»Ñ¡Ôñ valid point
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // é‚»å±…ç‚¹ä¸­åªé€‰æ‹© valid point
 				{
 					valid_neighbor_num++;
 				}
 			}
-			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // Á¬±ß¶¼ÊÇÍ¬ÀàĞÍµÄÖ÷Àà½Úµã£¬²¢ÇÒÈ¨ÖØÎª1£¬·ñÔòĞèÒªÁíĞĞ´¦Àí
+			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // è¿è¾¹éƒ½æ˜¯åŒç±»å‹çš„ä¸»ç±»èŠ‚ç‚¹ï¼Œå¹¶ä¸”æƒé‡ä¸º1ï¼Œå¦åˆ™éœ€è¦å¦è¡Œå¤„ç†
 
-			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // ¶ÔÃ¿¸ö´Ø
+			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // å¯¹æ¯ä¸ªç°‡
 			{
-				// ±£´æmaxSC
+				// ä¿å­˜maxSC
 				m_GlobalTable[vertexid][3 + 2 * c_id + 1] = maxSC;
 				
-				// ¼ÆËãµ±Ç°½Úµã·ÖÅäµ½¸÷¸ö´ØµÄìØ
-				set<int> temp_cluster(m_clusters[c_id]);   // ¸´ÖÆcluster
+				// è®¡ç®—å½“å‰èŠ‚ç‚¹åˆ†é…åˆ°å„ä¸ªç°‡çš„ç†µ
+				set<int> temp_cluster(m_clusters[c_id]);   // å¤åˆ¶cluster
 				if (c_id != clusterid)
-					temp_cluster.insert(vertexid);         // ´ı·ÖÅä½Úµã¼ÓÈë¸÷¸ö´ØÖĞ
+					temp_cluster.insert(vertexid);         // å¾…åˆ†é…èŠ‚ç‚¹åŠ å…¥å„ä¸ªç°‡ä¸­
 
-				// ¼ÆËãìØ
+				// è®¡ç®—ç†µ
 				//m_GlobalTable[vertexid][3 + 2 * c_id] = getClusterEntropy(temp_cluster);
 			}
 		}
@@ -451,7 +451,7 @@ void GameTheory::E_buildGlobalTable()
 
 void GameTheory::AET_buildGlobalTable()
 {
-	// ³õÊ¼»¯
+	// åˆå§‹åŒ–
 	m_GlobalTable.clear();
 	AET.clear();
 	for (auto v_id : m_valid_cluster_points)
@@ -465,56 +465,56 @@ void GameTheory::AET_buildGlobalTable()
 	{
 		for (auto vertexid : m_clusters[clusterid])
 		{
-			// ³õÊ¼»¯±íÍ·
-			m_GlobalTable[vertexid][0] = (float)clusterid;      // Êµ¼ÊÀà±ğ
-			m_GlobalTable[vertexid][1] = -1.0f;                 // ×îĞ¡´ú¼ÛÀà±ğ
-			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = ÎŞÇî´ó
+			// åˆå§‹åŒ–è¡¨å¤´
+			m_GlobalTable[vertexid][0] = (float)clusterid;      // å®é™…ç±»åˆ«
+			m_GlobalTable[vertexid][1] = -1.0f;                 // æœ€å°ä»£ä»·ç±»åˆ«
+			m_GlobalTable[vertexid][2] = 1e8;                   // minCost = æ— ç©·å¤§
 
-			// ¼ÆËãmaxSC
+			// è®¡ç®—maxSC
 			int valid_neighbor_num = 0;
 			Vertex * v = g_vertices[vertexid];
 			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
 			{
 				int f = v->neighborvertex[i];     // f is a friend of v
-				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // ÁÚ¾ÓµãÖĞÖ»Ñ¡Ôñ valid point
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())    // é‚»å±…ç‚¹ä¸­åªé€‰æ‹© valid point
 				{
 					valid_neighbor_num++;
 				}
 			}
-			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // Á¬±ß¶¼ÊÇÍ¬ÀàĞÍµÄÖ÷Àà½Úµã£¬²¢ÇÒÈ¨ÖØÎª1£¬·ñÔòĞèÒªÁíĞĞ´¦Àí
+			float maxSC = (1 - g_gamma) * 0.5f * valid_neighbor_num;   // è¿è¾¹éƒ½æ˜¯åŒç±»å‹çš„ä¸»ç±»èŠ‚ç‚¹ï¼Œå¹¶ä¸”æƒé‡ä¸º1ï¼Œå¦åˆ™éœ€è¦å¦è¡Œå¤„ç†
 
-			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // ¶ÔÃ¿¸ö´Ø
+			for (int c_id = 0; c_id < m_clusters.size(); c_id++)       // å¯¹æ¯ä¸ªç°‡
 			{
-				// ±£´æmaxSC
+				// ä¿å­˜maxSC
 				m_GlobalTable[vertexid][3 + 2 * c_id + 1] = maxSC;
 
-				// ¼ÆËãµ±Ç°½Úµã·ÖÅäµ½¸÷¸ö´ØµÄìØ
-				set<int> temp_cluster(m_clusters[c_id]);   // ¸´ÖÆcluster
+				// è®¡ç®—å½“å‰èŠ‚ç‚¹åˆ†é…åˆ°å„ä¸ªç°‡çš„ç†µ
+				set<int> temp_cluster(m_clusters[c_id]);   // å¤åˆ¶cluster
 				if (c_id != clusterid)
-					temp_cluster.insert(vertexid);         // ´ı·ÖÅä½Úµã¼ÓÈë¸÷¸ö´ØÖĞ
+					temp_cluster.insert(vertexid);         // å¾…åˆ†é…èŠ‚ç‚¹åŠ å…¥å„ä¸ªç°‡ä¸­
 
-				// ¹¹½¨appearances±í
+				// æ„å»ºappearancesè¡¨
 				// ------------------------------------------------------------
 				for (int i = ATTRIBUTE_1; i < ATTRIBUTE_1 + ATTRIBUTE_NUM; i++)
 				{
 					int type1 = STRUCTURE;
 					int type2 = i;
 
-					//Ã¶¾Ù´ØÀïÃæµÄÃ¿Ò»¸öµã×÷ÎªÔ´µã
+					//æšä¸¾ç°‡é‡Œé¢çš„æ¯ä¸€ä¸ªç‚¹ä½œä¸ºæºç‚¹
 					for (int vid : temp_cluster)
 					{
 						Vertex * v = g_vertices[vid];
 
-						if (v->vertextype == type1)             //Èç¹û¸ÃµãÊôÓÚtype1
+						if (v->vertextype == type1)             //å¦‚æœè¯¥ç‚¹å±äºtype1
 						{
-							//Ã¶¾ÙÕâ¸öµãÄÜµ½´ïµÄÆäËûµã
+							//æšä¸¾è¿™ä¸ªç‚¹èƒ½åˆ°è¾¾çš„å…¶ä»–ç‚¹
 							for (auto & uid : v->neighborvertex)
 							{
 								Vertex * u = g_vertices[uid];
 
-								if (u->vertextype == type2)      //Èç¹ûÖÕµãÀàĞÍÊÇtype2
+								if (u->vertextype == type2)      //å¦‚æœç»ˆç‚¹ç±»å‹æ˜¯type2
 								{
-									AET[vertexid][c_id][i - 1][u->vertexid] += 1;  // Í³¼Æappearances
+									AET[vertexid][c_id][i - 1][u->vertexid] += 1;  // ç»Ÿè®¡appearances
 								}
 							}
 						}
@@ -522,7 +522,7 @@ void GameTheory::AET_buildGlobalTable()
 				}
 				// ------------------------------------------------------------
 
-				// ¼ÆËãìØ
+				// è®¡ç®—ç†µ
 				m_GlobalTable[vertexid][3 + 2 * c_id] = AET_getClusterEntropy(vertexid, c_id);
 			}
 		}
@@ -532,17 +532,17 @@ void GameTheory::AET_buildGlobalTable()
 
 void GameTheory::E_initializeHappyQueue()
 {
-	swap(m_happy_queue, stack<int>());  // Çå¿Õ¶ÓÁĞ  
+	swap(m_happy_queue, stack<int>());  // æ¸…ç©ºé˜Ÿåˆ—  
 
 	for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
 	{
-		for (auto vertexid : m_clusters[clusterid])  // ±éÀúËùÓĞ½Úµã
+		for (auto vertexid : m_clusters[clusterid])  // éå†æ‰€æœ‰èŠ‚ç‚¹
 		{
-			// ´¦ÀíÃ¿¸öÀà±ğ
+			// å¤„ç†æ¯ä¸ªç±»åˆ«
 			float minCost = 1e8;
-			for (int c_id = 0; c_id < m_clusters.size(); c_id++)  // ¶ÔÃ¿¸ö´Ø
+			for (int c_id = 0; c_id < m_clusters.size(); c_id++)  // å¯¹æ¯ä¸ªç°‡
 			{
-				// ** ¼ÆËã´ú¼Û
+				// ** è®¡ç®—ä»£ä»·
 				float cost_c = getResponsecost(vertexid, c_id);
 
 				if (cost_c < minCost)
@@ -552,18 +552,18 @@ void GameTheory::E_initializeHappyQueue()
 				}
 			}
 
-			// ´¦ÀíÓĞĞ§µÄÁÚ¾Ó½Úµã
+			// å¤„ç†æœ‰æ•ˆçš„é‚»å±…èŠ‚ç‚¹
 			Vertex * v = g_vertices[vertexid];
 			for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
 			{
 				int f = v->neighborvertex[i];  // f is friend of v
-				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // ÁÚ¾ÓµãÖĞÖ»Ñ¡Ôñ valid point
+				if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // é‚»å±…ç‚¹ä¸­åªé€‰æ‹© valid point
 				{
 					auto iter = m_GlobalTable.find(f);
-					int f_clusterid = (int)round(iter->second[0]);   // »ñÈ¡fËùÔÚµÄÀà±ğ
-					m_GlobalTable[vertexid][3 + 2 * f_clusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];  // ĞŞ¸Äsocial cost
+					int f_clusterid = (int)round(iter->second[0]);   // è·å–fæ‰€åœ¨çš„ç±»åˆ«
+					m_GlobalTable[vertexid][3 + 2 * f_clusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];  // ä¿®æ”¹social cost
 
-					// ** ¼ÆËã´ú¼Û
+					// ** è®¡ç®—ä»£ä»·
 					float cost_c = getResponsecost(vertexid, f_clusterid);
 					if (cost_c < minCost)
 					{
@@ -573,10 +573,10 @@ void GameTheory::E_initializeHappyQueue()
 				}
 			}
 
-			// ±£´æ minCost 
+			// ä¿å­˜ minCost 
 			m_GlobalTable[vertexid][2] = minCost;
 
-			// Èç¹ûµ±Ç°Àà±ğºÍ×îĞ¡´ú¼ÛÀà±ğ²»Í¬£¬ÔòĞèÒª½øĞĞµ÷Õû£¬ Í³¼ÆĞèÒªµ÷ÕûµÄµã
+			// å¦‚æœå½“å‰ç±»åˆ«å’Œæœ€å°ä»£ä»·ç±»åˆ«ä¸åŒï¼Œåˆ™éœ€è¦è¿›è¡Œè°ƒæ•´ï¼Œ ç»Ÿè®¡éœ€è¦è°ƒæ•´çš„ç‚¹
 			if (m_GlobalTable[vertexid][0] != m_GlobalTable[vertexid][1])
 			{
 				m_happy_queue.push(vertexid);
@@ -591,53 +591,53 @@ void GameTheory::E_bestResponseDynamics()
 	m_updatetimes = 0;
 	while (!m_happy_queue.empty())
 	{
-		// »ñÈ¡ĞèÒªµ÷ÕûµÄ½Úµã
+		// è·å–éœ€è¦è°ƒæ•´çš„èŠ‚ç‚¹
 		int response_vertexid = m_happy_queue.top();
 		m_happy_queue.pop();
 
-		m_updatetimes++;  // Í³¼Æ¸üĞÂµÄµãµÄ´ÎÊı
+		m_updatetimes++;  // ç»Ÿè®¡æ›´æ–°çš„ç‚¹çš„æ¬¡æ•°
 
-		// ½øĞĞÀà±ğµ÷ÕûÓë´ú¼Û¸üĞÂ
+		// è¿›è¡Œç±»åˆ«è°ƒæ•´ä¸ä»£ä»·æ›´æ–°
 		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
 		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
 
-		if (currentclusterid == nextclusterid)      // ÔÚ±¾Àà´ú¼Û½øÒ»²½¼õĞ¡µÄÇé¿ö
+		if (currentclusterid == nextclusterid)      // åœ¨æœ¬ç±»ä»£ä»·è¿›ä¸€æ­¥å‡å°çš„æƒ…å†µ
 			continue;
 
-		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // µ÷ÕûÀà±ğ
+		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // è°ƒæ•´ç±»åˆ«
 
-		// ´Ó¾ÉÀàÖĞÒÆ³ıresponse_vertexid²¢¼ÓÈëĞÂÀà
+		// ä»æ—§ç±»ä¸­ç§»é™¤response_vertexidå¹¶åŠ å…¥æ–°ç±»
 		m_clusters[currentclusterid].erase(m_clusters[currentclusterid].find(response_vertexid));
 		m_clusters[nextclusterid].insert(response_vertexid);
 
-		// ¸ù¾İµ÷ÕûµÄ±ä»¯µ÷½ÚÆäËûËùÓĞµãµÄ assignment cost
+		// æ ¹æ®è°ƒæ•´çš„å˜åŒ–è°ƒèŠ‚å…¶ä»–æ‰€æœ‰ç‚¹çš„ assignment cost
 		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
 		{
-			for (auto vertexid : m_clusters[clusterid])  // ±éÀúËùÓĞ½Úµã
+			for (auto vertexid : m_clusters[clusterid])  // éå†æ‰€æœ‰èŠ‚ç‚¹
 			{
-				if (vertexid == response_vertexid)  // vertexid×ÔÉíµÄ assignment cost ²»±ä
+				if (vertexid == response_vertexid)  // vertexidè‡ªèº«çš„ assignment cost ä¸å˜
 					continue;
 
 				/*
-					response_vertexid½øĞĞÀà±ğµ÷ÕûÖ®ºó£¬ËùÓĞÆäËûµãÔÚcurrentclusteridºÍnextclusteridµÄìØ¶¼ĞèÒªÖØĞÂ¼ÆËã
+					response_vertexidè¿›è¡Œç±»åˆ«è°ƒæ•´ä¹‹åï¼Œæ‰€æœ‰å…¶ä»–ç‚¹åœ¨currentclusteridå’Œnextclusteridçš„ç†µéƒ½éœ€è¦é‡æ–°è®¡ç®—
 				*/
-				// ´¦Àí¾ÉÀà, ¼ÆËãìØÖ®Ç°ĞèÒªÒÆ³ıresponse_vertexid
-				set<int> temp_cluster(m_clusters[currentclusterid]);   // ¸´ÖÆcluster
+				// å¤„ç†æ—§ç±», è®¡ç®—ç†µä¹‹å‰éœ€è¦ç§»é™¤response_vertexid
+				set<int> temp_cluster(m_clusters[currentclusterid]);   // å¤åˆ¶cluster
 				if (clusterid != currentclusterid)
 				{
-					temp_cluster.insert(vertexid);  // vertexidÈç¹û²»ÔÚcurrentclusteridÖĞ£¬²åÈë
+					temp_cluster.insert(vertexid);  // vertexidå¦‚æœä¸åœ¨currentclusteridä¸­ï¼Œæ’å…¥
 				}
-				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = getClusterEntropy(temp_cluster);   // ¸üĞÂìØ
+				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = getClusterEntropy(temp_cluster);   // æ›´æ–°ç†µ
 
-				// ´¦ÀíĞÂÀà, ¼ÆËãìØÖ®Ç°ĞèÒªÌí¼Óresponse_vertexid
-				set<int> temp_cluster2(m_clusters[nextclusterid]);   // ¸´ÖÆcluster
+				// å¤„ç†æ–°ç±», è®¡ç®—ç†µä¹‹å‰éœ€è¦æ·»åŠ response_vertexid
+				set<int> temp_cluster2(m_clusters[nextclusterid]);   // å¤åˆ¶cluster
 				if (clusterid != nextclusterid)
 				{
-					temp_cluster2.insert(vertexid);  // vertexidÈç¹û²»ÔÚnextclusteridÖĞ£¬²åÈë
+					temp_cluster2.insert(vertexid);  // vertexidå¦‚æœä¸åœ¨nextclusteridä¸­ï¼Œæ’å…¥
 				}
-				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = getClusterEntropy(temp_cluster2);   // ¸üĞÂìØ
+				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = getClusterEntropy(temp_cluster2);   // æ›´æ–°ç†µ
 
-				// ** ¼ÆËã´ú¼Û
+				// ** è®¡ç®—ä»£ä»·
 				float cost_old = getResponsecost(vertexid, currentclusterid);
 				float cost_new = getResponsecost(vertexid, nextclusterid);
 				float cost_c = min(cost_old, cost_new);
@@ -650,20 +650,20 @@ void GameTheory::E_bestResponseDynamics()
 			}
 		}
 
-		// ¸ù¾İÁÚ¾Ó½Úµãµ÷Õû social cost
+		// æ ¹æ®é‚»å±…èŠ‚ç‚¹è°ƒæ•´ social cost
 		Vertex * v = g_vertices[response_vertexid];
 		for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
 		{
 			int f = v->neighborvertex[i];  // f is friend of v
-			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // ÁÚ¾ÓµãÖĞÖ»Ñ¡Ôñ valid point
+			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // é‚»å±…ç‚¹ä¸­åªé€‰æ‹© valid point
 			{
-				// ¾ÉÀà, ´Ë´¦´ú¼ÛÖ»»áÔö´ó£¬²»»áÓĞ¸üĞ¡µÄ½â
+				// æ—§ç±», æ­¤å¤„ä»£ä»·åªä¼šå¢å¤§ï¼Œä¸ä¼šæœ‰æ›´å°çš„è§£
 				m_GlobalTable[f][3 + 2 * currentclusterid + 1] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
 
-				// ĞÂÀà
+				// æ–°ç±»
 				m_GlobalTable[f][3 + 2 * nextclusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
 
-				// ** ¼ÆËã´ú¼Û
+				// ** è®¡ç®—ä»£ä»·
 				float cost_c = getResponsecost(f, nextclusterid);
 				if (cost_c < m_GlobalTable[f][2])
 				{
@@ -682,53 +682,53 @@ void GameTheory::AET_bestResponseDynamics()
 	m_updatetimes = 0;
 	while (!m_happy_queue.empty())
 	{
-		// »ñÈ¡ĞèÒªµ÷ÕûµÄ½Úµã
+		// è·å–éœ€è¦è°ƒæ•´çš„èŠ‚ç‚¹
 		int response_vertexid = m_happy_queue.top();
 		m_happy_queue.pop();
 
-		m_updatetimes++;  // Í³¼Æ¸üĞÂµÄµãµÄ´ÎÊı
+		m_updatetimes++;  // ç»Ÿè®¡æ›´æ–°çš„ç‚¹çš„æ¬¡æ•°
 
-		// ½øĞĞÀà±ğµ÷ÕûÓë´ú¼Û¸üĞÂ
+		// è¿›è¡Œç±»åˆ«è°ƒæ•´ä¸ä»£ä»·æ›´æ–°
 		int currentclusterid = (int)round(m_GlobalTable[response_vertexid][0]);
 		int nextclusterid = (int)round(m_GlobalTable[response_vertexid][1]);
 
-		if (currentclusterid == nextclusterid)      // ÔÚ±¾Àà´ú¼Û½øÒ»²½¼õĞ¡µÄÇé¿ö
+		if (currentclusterid == nextclusterid)      // åœ¨æœ¬ç±»ä»£ä»·è¿›ä¸€æ­¥å‡å°çš„æƒ…å†µ
 			continue;
 
-		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // µ÷ÕûÀà±ğ
+		m_GlobalTable[response_vertexid][0] = (float)nextclusterid;  // è°ƒæ•´ç±»åˆ«
 
 		Vertex * v = g_vertices[response_vertexid];
 
-		// ¸ù¾İµ÷ÕûµÄ±ä»¯µ÷½ÚÆäËûËùÓĞµãµÄ assignment cost
+		// æ ¹æ®è°ƒæ•´çš„å˜åŒ–è°ƒèŠ‚å…¶ä»–æ‰€æœ‰ç‚¹çš„ assignment cost
 		for (int clusterid = 0; clusterid < m_clusters.size(); clusterid++)
 		{
-			for (auto vertexid : m_clusters[clusterid])  // ±éÀúËùÓĞ½Úµã
+			for (auto vertexid : m_clusters[clusterid])  // éå†æ‰€æœ‰èŠ‚ç‚¹
 			{
-				if (vertexid == response_vertexid)  // vertexid×ÔÉíµÄ assignment cost ²»±ä
+				if (vertexid == response_vertexid)  // vertexidè‡ªèº«çš„ assignment cost ä¸å˜
 					continue;
 
 				/*
-				¸üĞÂ: response_vertexid½øĞĞÀà±ğµ÷ÕûÖ®ºó£¬ËùÓĞÆäËûµãÔÚcurrentclusteridºÍnextclusteridµÄìØ¶¼ĞèÒªÖØĞÂ¼ÆËã
+				æ›´æ–°: response_vertexidè¿›è¡Œç±»åˆ«è°ƒæ•´ä¹‹åï¼Œæ‰€æœ‰å…¶ä»–ç‚¹åœ¨currentclusteridå’Œnextclusteridçš„ç†µéƒ½éœ€è¦é‡æ–°è®¡ç®—
 				*/
-				for (int ii = v->edgetype_outdegree[STRUCTURE]; ii < v->neighborvertex.size(); ii++)   // ´¦ÀíÊôĞÔÁÚ¾Óµã
+				for (int ii = v->edgetype_outdegree[STRUCTURE]; ii < v->neighborvertex.size(); ii++)   // å¤„ç†å±æ€§é‚»å±…ç‚¹
 				{
-					int uid = v->neighborvertex[ii];  // È¡³ö¸ÃÊôĞÔÁÚ¾Óµã
+					int uid = v->neighborvertex[ii];  // å–å‡ºè¯¥å±æ€§é‚»å±…ç‚¹
 					Vertex * u = g_vertices[uid];
 
-					// ´¦Àí¾ÉÀà, ÔÚvertexid¶ÔÓ¦µÄcurrentclusteridµÄÀà±ğÖĞÉ¾³ıresponse_vertexid²úÉúµÄappearance
-					if (AET[vertexid][currentclusterid][u->vertextype - 1][uid] < 2)  // Ö»ÓĞÒ»´Îappearance, É¾³ıÕâ¸ö¼üÖµ¶Ô
+					// å¤„ç†æ—§ç±», åœ¨vertexidå¯¹åº”çš„currentclusteridçš„ç±»åˆ«ä¸­åˆ é™¤response_vertexidäº§ç”Ÿçš„appearance
+					if (AET[vertexid][currentclusterid][u->vertextype - 1][uid] < 2)  // åªæœ‰ä¸€æ¬¡appearance, åˆ é™¤è¿™ä¸ªé”®å€¼å¯¹
 						AET[vertexid][currentclusterid][u->vertextype - 1].erase(AET[vertexid][currentclusterid][u->vertextype - 1].find(uid));
 					else
 						AET[vertexid][currentclusterid][u->vertextype - 1][uid] -= 1;
 
-					// ´¦ÀíĞÂÀà, ÔÚvertexid¶ÔÓ¦µÄnextclusteridµÄÀà±ğÖĞÌí¼Óresponse_vertexid²úÉúµÄappearance
+					// å¤„ç†æ–°ç±», åœ¨vertexidå¯¹åº”çš„nextclusteridçš„ç±»åˆ«ä¸­æ·»åŠ response_vertexidäº§ç”Ÿçš„appearance
 					AET[vertexid][nextclusterid][u->vertextype - 1][uid] += 1;
 				}
 
-				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = AET_getClusterEntropy(vertexid, currentclusterid);  // ¾ÉÀà
-				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = AET_getClusterEntropy(vertexid, nextclusterid);        // ĞÂÀà
+				m_GlobalTable[vertexid][3 + 2 * currentclusterid] = AET_getClusterEntropy(vertexid, currentclusterid);  // æ—§ç±»
+				m_GlobalTable[vertexid][3 + 2 * nextclusterid] = AET_getClusterEntropy(vertexid, nextclusterid);        // æ–°ç±»
 
-				// ** ¼ÆËã´ú¼Û
+				// ** è®¡ç®—ä»£ä»·
 				float cost_old = getResponsecost(vertexid, currentclusterid);
 				float cost_new = getResponsecost(vertexid, nextclusterid);
 				float cost_c = min(cost_old, cost_new);
@@ -741,18 +741,18 @@ void GameTheory::AET_bestResponseDynamics()
 			}
 		}
 
-		// ¸ù¾İÁÚ¾Ó½Úµãµ÷Õû social cost
+		// æ ¹æ®é‚»å±…èŠ‚ç‚¹è°ƒæ•´ social cost
 		for (int i = 0; i < v->edgetype_outdegree[STRUCTURE]; i++)
 		{
 			int f = v->neighborvertex[i];  // f is friend of v
-			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // ÁÚ¾ÓµãÖĞÖ»Ñ¡Ôñ valid point
+			if (m_valid_cluster_points.find(f) != m_valid_cluster_points.end())  // é‚»å±…ç‚¹ä¸­åªé€‰æ‹© valid point
 			{
-				// ¾ÉÀà, ´Ë´¦´ú¼ÛÖ»»áÔö´ó£¬²»»áÓĞ¸üĞ¡µÄ½â
+				// æ—§ç±», æ­¤å¤„ä»£ä»·åªä¼šå¢å¤§ï¼Œä¸ä¼šæœ‰æ›´å°çš„è§£
 				m_GlobalTable[f][3 + 2 * currentclusterid + 1] += (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
 
-				// ĞÂÀà
+				// æ–°ç±»
 				m_GlobalTable[f][3 + 2 * nextclusterid + 1] -= (1 - g_gamma) * 0.5f * g_edgeweight[STRUCTURE][STRUCTURE];
-				// ** ¼ÆËã´ú¼Û
+				// ** è®¡ç®—ä»£ä»·
 				float cost_c = getResponsecost(f, nextclusterid);
 				if (cost_c < m_GlobalTable[f][2])
 				{
@@ -774,14 +774,14 @@ void GameTheory::gatherClusterResult()
 
 	for (int clusterid = 0; clusterid < old_clusters.size(); clusterid++)
 	{
-		for (auto vertexid : old_clusters[clusterid])  // ±éÀúËùÓĞ½Úµã
+		for (auto vertexid : old_clusters[clusterid])  // éå†æ‰€æœ‰èŠ‚ç‚¹
 		{
-			// ÖØĞÂÍ³¼Æ¸÷¸öµãµÄ¾ÛÀà½á¹û
+			// é‡æ–°ç»Ÿè®¡å„ä¸ªç‚¹çš„èšç±»ç»“æœ
 			new_clusters[(int)round(m_GlobalTable[vertexid][0])].insert(vertexid);
 		}
 	}
 
-	// ¶Ô¾ÛÀàºóµÄ½á¹û½øĞĞÉ¸Ñ¡
+	// å¯¹èšç±»åçš„ç»“æœè¿›è¡Œç­›é€‰
 	for (auto iter = new_clusters.begin(); iter != new_clusters.end();)
 	{
 		if ((*iter).empty())
@@ -800,22 +800,22 @@ void GameTheory::gameTheoryModulation()
 {
 	// 1. assignment cost == ppr
 	// --------------------------------------------------
-	buildGlobalTable();        // ¹¹½¨ Global Table, ¼ÆËã cN
+	buildGlobalTable();        // æ„å»º Global Table, è®¡ç®— cN
 	bestResponseDynamics();    // best-response dynamics
 
 	// 2. assignment cost = entropy
 	// --------------------------------------------------
-	//E_buildGlobalTable();        // ¹¹½¨ Global Table, ¼ÆËã cN
-	//E_initializeHappyQueue();    // ³õÊ¼»¯ happy_queue
+	//E_buildGlobalTable();        // æ„å»º Global Table, è®¡ç®— cN
+	//E_initializeHappyQueue();    // åˆå§‹åŒ– happy_queue
 	//E_bestResponseDynamics();    // best-response dynamics
 
-	// 3. assignment cost = entropy(Ê¹ÓÃAppearance Entropy Table)
+	// 3. assignment cost = entropy(ä½¿ç”¨Appearance Entropy Table)
 	// --------------------------------------------------
-	//AET_buildGlobalTable();        // ¹¹½¨ Global Table, ¼ÆËã cN
-	//E_initializeHappyQueue();      // ³õÊ¼»¯ happy_queue(Óë·½°¸2ÏàÍ¬)
-	//AET_bestResponseDynamics();    // best-response dynamics(AETÓÅ»¯·½°¸)
+	//AET_buildGlobalTable();        // æ„å»º Global Table, è®¡ç®— cN
+	//E_initializeHappyQueue();      // åˆå§‹åŒ– happy_queue(ä¸æ–¹æ¡ˆ2ç›¸åŒ)
+	//AET_bestResponseDynamics();    // best-response dynamics(AETä¼˜åŒ–æ–¹æ¡ˆ)
 
-	// ÖØĞÂÍ³¼Æ¾ÛÀà½á¹û
+	// é‡æ–°ç»Ÿè®¡èšç±»ç»“æœ
 	gatherClusterResult();
 }
 
@@ -838,14 +838,14 @@ void GameTheory::execute()
 
 	log_ou << endl << "********************************" << endl << "GameTheory Approach: " << endl;
 
-	// ====================================== ¶ÁÍ¼ ======================================
+	// ====================================== è¯»å›¾ ======================================
 	readGraph();
 	g_vertexnum = (int)g_vertices.size();
 
-	// ====================================== µü´ú¼ÆËã ======================================
-	m_cn_flag = true;   // Ö»¼ÆËãÒ»´Îcn
+	// ====================================== è¿­ä»£è®¡ç®— ======================================
+	m_cn_flag = true;   // åªè®¡ç®—ä¸€æ¬¡cn
 
-	// ÔËĞĞÊ±¼äÖØ¸´20´ÎÈ¡Æ½¾ùÖµ
+	// è¿è¡Œæ—¶é—´é‡å¤20æ¬¡å–å¹³å‡å€¼
 	int runTimes = 1;  // default = 20
 	long long total_running_time = 0;
 	for (int i = 0; i < runTimes; i++)
@@ -867,7 +867,7 @@ void GameTheory::execute()
 				return;
 			}
 
-			// Conpute ppr score
+			// Compute ppr score
 			g_pushbackcount = 0;
 			gameTheory_ReservePush();
 			total_pushback_times += g_pushbackcount;
@@ -883,15 +883,15 @@ void GameTheory::execute()
 			total_Update_times += m_updatetimes;
 
 			// Weight update
-			diff = weightUpdate_Entropy();        // ìØ£¨Ö»ÊµÏÖ°´Ö÷ÀàÅĞ¶Ï£©
-			//diff = weightUpdate_Vote();         // Í¶Æ±£¨Ö»ÊµÏÖ°´Ö÷ÀàÅĞ¶Ï£©
+			diff = weightUpdate_Entropy();        // ç†µï¼ˆåªå®ç°æŒ‰ä¸»ç±»åˆ¤æ–­ï¼‰
+			//diff = weightUpdate_Vote();         // æŠ•ç¥¨ï¼ˆåªå®ç°æŒ‰ä¸»ç±»åˆ¤æ–­ï¼‰
 		}
 		total_end = clock();
 
 		total_running_time += total_end - total_start;
 	}
 
-	// ====================================== Í³¼Æ½á¹û ======================================
+	// ====================================== ç»Ÿè®¡ç»“æœ ======================================
 	log_ou << "Total runningtime: " << total_running_time / runTimes << endl;
 	log_ou << "Iteration Times: " << iterTimes << endl;
 	log_ou << "Total Pushback Times: " << total_pushback_times << endl;
@@ -903,8 +903,8 @@ void GameTheory::execute()
 	}
 	log_ou << endl;
 
-	// ----- ¾ÛÀà·ÖÎö -----
-	// ¾ÛÀàÊıÄ¿
+	// ----- èšç±»åˆ†æ -----
+	// èšç±»æ•°ç›®
 	log_ou << "Cluster_Amount: " << m_clusters.size() << endl;
 	log_ou << "Valid_Cluster_points: " << m_valid_cluster_points.size() << endl;
 	// density
@@ -914,6 +914,6 @@ void GameTheory::execute()
 
 	log_ou.close();
 
-	// ´æ´¢¾ÛÀà½á¹û
+	// å­˜å‚¨èšç±»ç»“æœ
 	storeClusterResult(cluster_output);
 }
