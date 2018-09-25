@@ -26,19 +26,19 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 	static float * r = new float[g_vertexnum];
 	static float * ur = new float[g_vertexnum * ATTRIBUTE_NUM];
 
-	const int encode_buffer_size = 5 + (5 + ATTRIBUTE_NUM) * g_vertexnum;     // data block µÄ×î´óÕ¼ÓÃ¿Õ¼ä(°üº¬×îºó½áÊøÅĞ¶ÏÎ»)
+	const int encode_buffer_size = 5 + (5 + ATTRIBUTE_NUM) * g_vertexnum;     // data block çš„æœ€å¤§å ç”¨ç©ºé—´(åŒ…å«æœ€åç»“æŸåˆ¤æ–­ä½)
 	float * encode_buffer = new float[encode_buffer_size];
 
-	unsigned int write_buffer_size = 0;   // Êµ¼Ê data block ´óĞ¡
-	float flag[1];                        // ±ê¼Ç¸Ã¿éºóÃæÊÇ·ñ»¹ÓĞÊı¾İ¿é
+	unsigned int write_buffer_size = 0;   // å®é™… data block å¤§å°
+	float flag[1];                        // æ ‡è®°è¯¥å—åé¢æ˜¯å¦è¿˜æœ‰æ•°æ®å—
 
-	// ÄÚ´æÓ³ÉäÏà¹Ø
+	// å†…å­˜æ˜ å°„ç›¸å…³
 	MMF * mmf_ptr = NULL;
 	float * mmfm_base_address = NULL;
 	float * write_dst_ptr;
 	int mapfileid = 0;
 
-	// µÚÒ»¸ömmfÎÄ¼ş
+	// ç¬¬ä¸€ä¸ªmmfæ–‡ä»¶
 	mmf_ptr = new MMF();
 	char sharedname[1024] = "\0";
 	char filename[1024] = "\0";
@@ -71,11 +71,11 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 			int uID = *pushback_queue.begin();
 			pushback_queue.erase(pushback_queue.begin());
 
-			Vertex * u = g_vertices[uID];    // ¶ÁÈ¡´øpushback½ÚµãĞÅÏ¢
+			Vertex * u = g_vertices[uID];    // è¯»å–å¸¦pushbackèŠ‚ç‚¹ä¿¡æ¯
 
 			p[uID] += g_alpha * r[uID];      // estimated value
 
-			//±éÀúuÄÜ¹»µ½´ïµÄµã£¨reserve push£©
+			//éå†uèƒ½å¤Ÿåˆ°è¾¾çš„ç‚¹ï¼ˆreserve pushï¼‰
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -90,14 +90,14 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 		}
 		pushback_queue.clear();
 
-		// ---------- ¼ÆËãur ----------
+		// ---------- è®¡ç®—ur ----------
 		int u_ptr = 0;
 		for (int i = 0; i < g_vertexnum; i++)
 		{
 			Vertex * u = g_vertices[i];
-			int checkhop = u->edgetype_outdegree[STRUCTURE];       // ±ê¼ÇÊôĞÔ½Úµã¿ªÊ¼Î»ÖÃ
+			int checkhop = u->edgetype_outdegree[STRUCTURE];       // æ ‡è®°å±æ€§èŠ‚ç‚¹å¼€å§‹ä½ç½®
 
-			for (int j = ATTRIBUTE_1; j <= ATTRIBUTE_NUM; j++)   // ¶ÔÓ¦ÊôĞÔ±àºÅ£¬´Ó1¿ªÊ¼
+			for (int j = ATTRIBUTE_1; j <= ATTRIBUTE_NUM; j++)   // å¯¹åº”å±æ€§ç¼–å·ï¼Œä»1å¼€å§‹
 			{
 				float sum_atribute_p = 0.0;
 				for (int k = 0; k < u->edgetype_outdegree[j]; k++)
@@ -117,8 +117,8 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 			}
 		}
 
-		// ---------- Êı¾İÑ¹Ëõ²¢Ğ´ÈëÎÄ¼ş ----------
-		int buffer_index = 4;    // [0] - [3] ÎªÊı¾İ¿éÍ· 
+		// ---------- æ•°æ®å‹ç¼©å¹¶å†™å…¥æ–‡ä»¶ ----------
+		int buffer_index = 4;    // [0] - [3] ä¸ºæ•°æ®å—å¤´ 
 		int b_p_count = 0;
 		int b_r_count = 0;
 		int b_ur_count = 0;
@@ -147,7 +147,7 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 		for (int i = 0; i < g_vertexnum; i++)
 		{
 			bool c_flag = true;
-			for (int tt = 0; tt < ATTRIBUTE_NUM; tt++)    // Èı¸öÊôĞÔ¶ÔÓ¦ÖµÈ«Îª0µÄ»°£¬È¥µô
+			for (int tt = 0; tt < ATTRIBUTE_NUM; tt++)    // ä¸‰ä¸ªå±æ€§å¯¹åº”å€¼å…¨ä¸º0çš„è¯ï¼Œå»æ‰
 			{
 				if (ur[i * ATTRIBUTE_NUM + tt] > 0)
 				{
@@ -166,30 +166,30 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 			}
 		}
 
-		unsigned int block_size = 4 + b_p_count * 2 + b_r_count * 2 + b_ur_count * (1 + ATTRIBUTE_NUM);   // Êı¾İ¿é´óĞ¡
+		unsigned int block_size = 4 + b_p_count * 2 + b_r_count * 2 + b_ur_count * (1 + ATTRIBUTE_NUM);   // æ•°æ®å—å¤§å°
 
-		// buffer¿éÍ·²¿Í³¼Æ
-		encode_buffer[0] = (float)targetID;     // ½Úµãid
+		// bufferå—å¤´éƒ¨ç»Ÿè®¡
+		encode_buffer[0] = (float)targetID;     // èŠ‚ç‚¹id
 		encode_buffer[1] = (float)b_p_count;
 		encode_buffer[2] = (float)b_r_count;
 		encode_buffer[3] = (float)b_ur_count;
 
-		write_buffer_size += (block_size + 1) * sizeof(float);   // °üº¬×îºó½áÊøÅĞ¶ÏÎ»
+		write_buffer_size += (block_size + 1) * sizeof(float);   // åŒ…å«æœ€åç»“æŸåˆ¤æ–­ä½
 
 		if (write_buffer_size < a_mmf_buffer_size)
 		{
-			if (targetID > g_cluster_startid)  // µÚÒ»¸öÊı¾İ¿é²»ĞèÒªÔÚÇ°Ãæ¼Ó±êÖ¾Î»
+			if (targetID > g_cluster_startid)  // ç¬¬ä¸€ä¸ªæ•°æ®å—ä¸éœ€è¦åœ¨å‰é¢åŠ æ ‡å¿—ä½
 			{
-				flag[0] = 1.0f;     // ºóÃæ»¹ÓĞÊı¾İ¿é
+				flag[0] = 1.0f;     // åé¢è¿˜æœ‰æ•°æ®å—
 				memcpy(write_dst_ptr, flag, sizeof(float));
 				write_dst_ptr = write_dst_ptr + 1;
 			}
 
-			// Êı¾İĞ´ÈëÄÚ´æÓ³ÉäÎÄ¼ş
+			// æ•°æ®å†™å…¥å†…å­˜æ˜ å°„æ–‡ä»¶
 			memcpy(write_dst_ptr, encode_buffer, block_size * sizeof(float));
 			write_dst_ptr = write_dst_ptr + block_size;
 		}
-		else     // ÉÏÒ»¸öÎÄ¼ş´óĞ¡ÒÑ¾­´ïµ½ÉÏÏŞ
+		else     // ä¸Šä¸€ä¸ªæ–‡ä»¶å¤§å°å·²ç»è¾¾åˆ°ä¸Šé™
 		{
 			flag[0] = -1.0f;
 			memcpy(write_dst_ptr, flag, sizeof(float));
@@ -198,9 +198,9 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 			mmf_ptr->mmfClose(mmfm_base_address);
 			delete mmf_ptr;
 
-			write_buffer_size = block_size * sizeof(float);    // ¸üĞÂÍ³¼Æ¿é
+			write_buffer_size = block_size * sizeof(float);    // æ›´æ–°ç»Ÿè®¡å—
 
-			// ´´½¨Ò»¸öĞÂµÄÎÄ¼ş
+			// åˆ›å»ºä¸€ä¸ªæ–°çš„æ–‡ä»¶
 			mmf_ptr = new MMF();
 			char sharedname[1024] = "\0";
 			char filename[1024] = "\0";
@@ -210,18 +210,18 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 			write_dst_ptr = mmfm_base_address;
 			mapfileid++;
 
-			// Êı¾İĞ´ÈëÄÚ´æÓ³ÉäÎÄ¼ş
+			// æ•°æ®å†™å…¥å†…å­˜æ˜ å°„æ–‡ä»¶
 			memcpy(write_dst_ptr, encode_buffer, block_size * sizeof(float));
 			write_dst_ptr = write_dst_ptr + block_size;
 		}
 	}
-	// ¹Ø±Õ×îºóÒ»¸öÄÚ´æÓ³ÉäÎÄ¼ş
+	// å…³é—­æœ€åä¸€ä¸ªå†…å­˜æ˜ å°„æ–‡ä»¶
 	flag[0] = -1.0f;
 	memcpy(write_dst_ptr, flag, sizeof(float));
 	mmf_ptr->mmfClose(mmfm_base_address);
 	delete mmf_ptr;
 
-	// ±£´æÔ¤´æÎÄ¼şµÄÊıÁ¿
+	// ä¿å­˜é¢„å­˜æ–‡ä»¶çš„æ•°é‡
 	int pre_file_num = mapfileid;
 	ofstream pre_file_ou;
 	string pre_file_outputpath = g_mmfPath + to_string(g_datasetid) + "_" + to_string(g_clustertype) + "_" + to_string(g_schemeid) + ".num";
@@ -229,7 +229,7 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 	pre_file_ou << pre_file_num << endl;
 	pre_file_ou.close();
 
-	// ÊÍ·Å»º³åÇø
+	// é‡Šæ”¾ç¼“å†²åŒº
 	delete p;
 	delete r;
 	delete ur;
@@ -237,10 +237,10 @@ void ApproximateReservePush::reservePush_Pre_Encode()
 }
 
 
-// µ¥Ïß³Ì£¬ÓÃÓÚ²âÊÔ
+// å•çº¿ç¨‹ï¼Œç”¨äºæµ‹è¯•
 void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
 {
-	int taskid = 0;  // ÈËÎªÖ¸¶¨ÎÄ¼şÃû³Æ±àºÅ
+	int taskid = 0;  // äººä¸ºæŒ‡å®šæ–‡ä»¶åç§°ç¼–å·
 
 	int pr_id = 0;
 	int ud_id = 0;
@@ -269,9 +269,9 @@ void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
 
 	while (true)
 	{
-		memset(g_pr_pool[pr_id], 0, 2 * g_vertexnum * sizeof(float));   // ×îºóÒ»Î»±£´ætargetid
+		memset(g_pr_pool[pr_id], 0, 2 * g_vertexnum * sizeof(float));   // æœ€åä¸€ä½ä¿å­˜targetid
 
-		targetID = (int)round(buffersection[b_index++]);                // _pr ×îºóÒ»Î»±£´æ target_id
+		targetID = (int)round(buffersection[b_index++]);                // _pr æœ€åä¸€ä½ä¿å­˜ target_id
 		b_p_count = (int)round(buffersection[b_index++]);
 		b_r_count = (int)round(buffersection[b_index++]);
 		b_ur_count = (int)round(buffersection[b_index++]);
@@ -302,7 +302,7 @@ void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
 			}
 		}
 
-		// ¸üĞÂ
+		// æ›´æ–°
 		set<int> pushback_queue;
 
 		for (int i = g_cluster_startid; i <= g_cluster_endid; i++)
@@ -313,18 +313,18 @@ void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
 			}
 		}
 
-		// ¸ù¾İ¸üĞÂ½á¹ûÔÙ´Î½øĞĞ pushback
+		// æ ¹æ®æ›´æ–°ç»“æœå†æ¬¡è¿›è¡Œ pushback
 		while (pushback_queue.size() > 0)
 		{
 			//push_back u
 			int uID = *pushback_queue.begin();
 			pushback_queue.erase(pushback_queue.begin());
 
-			Vertex * u = g_vertices[uID];                                            // ¶ÁÈ¡´øpushback½ÚµãĞÅÏ¢
+			Vertex * u = g_vertices[uID];                                            // è¯»å–å¸¦pushbackèŠ‚ç‚¹ä¿¡æ¯
 
 			g_pr_pool[ud_id][uID] += g_alpha * g_pr_pool[ud_id][g_vertexnum + uID];      // estimated value
 
-			//±éÀúuÄÜ¹»µ½´ïµÄµã£¨reserve push£©
+			//éå†uèƒ½å¤Ÿåˆ°è¾¾çš„ç‚¹ï¼ˆreserve pushï¼‰
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -339,7 +339,7 @@ void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
 		}
 		pushback_queue.clear();
 
-		// »ñÈ¡ÁÚ¾Ó
+		// è·å–é‚»å±…
 		set<int> n_set;
 		for (int i = 0; i < g_vertexnum; i++)
 		{
@@ -352,7 +352,7 @@ void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
 		g_dbscanneighborsets.insert(pair<int, set<int>>(targetID, n_set));
 		n_set.clear();
 
-		// ½áÊø±êÖ¾
+		// ç»“æŸæ ‡å¿—
 		continue_flag = buffersection[b_index++];
 		if (continue_flag < 0)
 		{
@@ -365,9 +365,9 @@ void approximateReservePushSingleThreadUpdate(ofstream & log_ou)
 unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 {
 	int taskid = *(int*)pM;
-	SetEvent(g_hThreadEvent);      //´¥·¢ÊÂ¼ş
+	SetEvent(g_hThreadEvent);      //è§¦å‘äº‹ä»¶
 
-	//»¥³â»ñÈ¡»º³åÇø
+	//äº’æ–¥è·å–ç¼“å†²åŒº
 	EnterCriticalSection(&g_cs);
 
 	if (g_buffer_queue.size() == 0)
@@ -404,7 +404,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 	{
 		memset(g_pr_pool[buffer_id], 0, 2 * g_vertexnum * sizeof(float));
 
-		// ½âÎöÊı¾İ¿é
+		// è§£ææ•°æ®å—
 		targetID = (int)round(buffersection[b_index++]);
 		b_p_count = (int)round(buffersection[b_index++]);
 		b_r_count = (int)round(buffersection[b_index++]);
@@ -434,7 +434,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 			}
 		}
 
-		// ¸üĞÂ
+		// æ›´æ–°
 		set<int> pushback_queue;
 
 		for (int i = 0; i < g_vertexnum; i++)
@@ -445,7 +445,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 			}
 		}
 
-		// ¸ù¾İ¸üĞÂ½á¹ûÔÙ´Î½øĞĞ pushback
+		// æ ¹æ®æ›´æ–°ç»“æœå†æ¬¡è¿›è¡Œ pushback
 		while (pushback_queue.size() > 0)
 		{
 			//push_back u
@@ -457,7 +457,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 			g_pr_pool[buffer_id][uID] += g_alpha * g_pr_pool[buffer_id][g_vertexnum + uID];      // estimated value
 			pushback_c++;
 
-			//±éÀúuÄÜ¹»µ½´ïµÄµã£¨reserve push£©
+			//éå†uèƒ½å¤Ÿåˆ°è¾¾çš„ç‚¹ï¼ˆreserve pushï¼‰
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -472,7 +472,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 		}
 		pushback_queue.clear();
 
-		// »ñÈ¡ÁÚ¾Ó
+		// è·å–é‚»å±…
 		set<int> n_set;
 		for (int i = g_cluster_startid; i <= g_cluster_endid; i++)
 		{
@@ -483,7 +483,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 		}
 		set_queue.push_back(pair<int, set<int>>(targetID, n_set));
 		
-		// ½áÊø±êÖ¾
+		// ç»“æŸæ ‡å¿—
 		continue_flag = buffersection[b_index++];
 		if (continue_flag < 0)
 		{
@@ -491,7 +491,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 		}
 	}
 
-	//»¥³âÊÍ·Å»º³åÇø
+	//äº’æ–¥é‡Šæ”¾ç¼“å†²åŒº
 	EnterCriticalSection(&g_cs);
 
 	for (auto npair : set_queue)
@@ -502,7 +502,7 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 	g_pushbackcount += pushback_c;
 	LeaveCriticalSection(&g_cs);
 
-	// Í¨Öª¿É¼ÓÔØĞÂµÄÏß³Ì
+	// é€šçŸ¥å¯åŠ è½½æ–°çš„çº¿ç¨‹
 	ReleaseSemaphore(g_hSemaphoreRunnerNum, 1, NULL);
 	return 0;
 }
@@ -510,22 +510,22 @@ unsigned int __stdcall approximateReservePushMultiThreadUpdateFunc(PVOID pM)
 
 void ApproximateReservePush::approximateReservePushMultiThreadUpdate()
 {
-	g_dbscanneighborsets.clear();   // ÖØÖÃ
+	g_dbscanneighborsets.clear();   // é‡ç½®
 
 	InitializeCriticalSection(&g_cs);        
-	g_hSemaphoreRunnerNum = CreateSemaphore(NULL, 7, 7, NULL);      // ²ÎÊı±íÊ¾ÔÊĞíÍ¬Ê±ÔËĞĞµÄÏß³ÌÊı(Óë»º³åÇøÊıÄ¿¶ÔÓ¦)
-	g_hThreadEvent = CreateEvent(NULL, FALSE, FALSE, NULL);         // ÓÃÀ´±£Ö¤²ÎÊı´«µİµÄÍ¬²½
+	g_hSemaphoreRunnerNum = CreateSemaphore(NULL, 7, 7, NULL);      // å‚æ•°è¡¨ç¤ºå…è®¸åŒæ—¶è¿è¡Œçš„çº¿ç¨‹æ•°(ä¸ç¼“å†²åŒºæ•°ç›®å¯¹åº”)
+	g_hThreadEvent = CreateEvent(NULL, FALSE, FALSE, NULL);         // ç”¨æ¥ä¿è¯å‚æ•°ä¼ é€’çš„åŒæ­¥
 
-	// Ö¸¶¨Ïß³ÌÊıÁ¿(ÈÎÎñÊıÁ¿)
+	// æŒ‡å®šçº¿ç¨‹æ•°é‡(ä»»åŠ¡æ•°é‡)
 	HANDLE * hThread = new HANDLE[a_THREADNUM];
 
-	// Ö´ĞĞÏß³Ì
+	// æ‰§è¡Œçº¿ç¨‹
 	for (int i = 0; i < a_THREADNUM; i++)
 	{
-		// µÈ´ıÓĞ¿ÕµÄ»º³åÇø³öÏÖ
+		// ç­‰å¾…æœ‰ç©ºçš„ç¼“å†²åŒºå‡ºç°
 		WaitForSingleObject(g_hSemaphoreRunnerNum, INFINITE);
 		hThread[i] = (HANDLE)_beginthreadex(NULL, 0, approximateReservePushMultiThreadUpdateFunc, &i, 0, NULL);
-		WaitForSingleObject(g_hThreadEvent, INFINITE);             // µÈ´ıÊÂ¼ş±»´¥·¢  
+		WaitForSingleObject(g_hThreadEvent, INFINITE);             // ç­‰å¾…äº‹ä»¶è¢«è§¦å‘  
 	}
 
 	WaitForMultipleObjects(a_THREADNUM, hThread, TRUE, INFINITE);
@@ -554,25 +554,25 @@ void ApproximateReservePush::execute()
 	clock_t total_start, total_end;
 
 	log_ou << endl << "********************************" << endl << "Approximate Approach: " << endl;
-	// ====================================== ¶ÁÍ¼ ======================================
+	// ====================================== è¯»å›¾ ======================================
 	readGraph();
 	g_vertexnum = (int)g_vertices.size();
-	// ====================================== Ô¤´¦Àí ====================================== 
+	// ====================================== é¢„å¤„ç† ====================================== 
 	if (g_preflag)
 	{
-		reservePush_Pre_Encode();   // Ñ¹Ëõ
+		reservePush_Pre_Encode();   // å‹ç¼©
 		cout << "PreProcess is Completed!" << endl;
 		log_ou << "PreProcess is Completed!" << endl;
 		return;
 	}
-	// ¶ÁÈ¡Ô¤´æÎÄ¼şµÄÊıÁ¿
+	// è¯»å–é¢„å­˜æ–‡ä»¶çš„æ•°é‡
 	ifstream pre_file_in;
 	string pre_file_inputpath = g_mmfPath + to_string(g_datasetid) + "_" + to_string(g_clustertype) + "_" + to_string(g_schemeid) + ".num";
 	pre_file_in.open(pre_file_inputpath, ios::in);
 	pre_file_in >> a_THREADNUM;
 	pre_file_in.close();
-	// ====================================== µü´ú¼ÆËã ======================================
-	// ·ÖÅä»º³åÇø¿Õ¼ä
+	// ====================================== è¿­ä»£è®¡ç®— ======================================
+	// åˆ†é…ç¼“å†²åŒºç©ºé—´
 	g_buffer_queue.clear();
 	for (int i = 0; i < g_buff_size; i++)
 	{
@@ -581,7 +581,7 @@ void ApproximateReservePush::execute()
 		g_buffer_queue.insert(i);
 	}
 
-	// ÔËĞĞÊ±¼äÖØ¸´20´ÎÈ¡Æ½¾ùÖµ
+	// è¿è¡Œæ—¶é—´é‡å¤20æ¬¡å–å¹³å‡å€¼
 	int runTimes = 1;
 	long long total_running_time = 0;
 	for (int i = 0; i < runTimes; i++)
@@ -602,11 +602,11 @@ void ApproximateReservePush::execute()
 				return;
 			}
 
-			// Conpute ppr score
+			// Compute ppr score
 			g_pushbackcount = 0;
-			// 1. µ¥Ïß³Ì
+			// 1. å•çº¿ç¨‹
 			//approximateReservePushSingleThreadUpdate(log_ou);
-			// 2. ¶àÏß³Ì
+			// 2. å¤šçº¿ç¨‹
 			approximateReservePushMultiThreadUpdate();
 			total_pushback_times += g_pushbackcount;
 
@@ -623,22 +623,22 @@ void ApproximateReservePush::execute()
 				log_ou << g_edgeweight[STRUCTURE][i] << "\t";
 			}
 			log_ou << endl;
-			diff = weightUpdate_Entropy();         // ìØ£¨Ö»ÊµÏÖ°´Ö÷ÀàÅĞ¶Ï£©
-			//diff = weightUpdate_Vote();          // Í¶Æ±£¨Ö»ÊµÏÖ°´Ö÷ÀàÅĞ¶Ï£©
+			diff = weightUpdate_Entropy();         // ç†µï¼ˆåªå®ç°æŒ‰ä¸»ç±»åˆ¤æ–­ï¼‰
+			//diff = weightUpdate_Vote();          // æŠ•ç¥¨ï¼ˆåªå®ç°æŒ‰ä¸»ç±»åˆ¤æ–­ï¼‰
 		}
 		total_end = clock();
 
 		total_running_time += total_end - total_start;
 	}
 
-	// »ØÊÕ»º³åÇø
+	// å›æ”¶ç¼“å†²åŒº
 	for (int i = 0; i < g_buff_size; i++)
 	{
 		delete g_bufferpool[i];
 		delete g_pr_pool[i];
 	}
 
-	// ====================================== Í³¼Æ½á¹û ======================================
+	// ====================================== ç»Ÿè®¡ç»“æœ ======================================
 	log_ou << "Total runningtime: " << total_running_time / runTimes << endl;
 	log_ou << "Iteration Times: " << iterTimes << endl;
 	log_ou << "Total Pushback Times: " << total_pushback_times << endl;
@@ -649,8 +649,8 @@ void ApproximateReservePush::execute()
 	}
 	log_ou << endl;
 
-	// ----- ¾ÛÀà·ÖÎö -----
-	// ¾ÛÀàÊıÄ¿
+	// ----- èšç±»åˆ†æ -----
+	// èšç±»æ•°ç›®
 	log_ou << "Cluster_Amount: " << m_clusters.size() << endl;
 	log_ou << "Valid_Cluster_points: " << m_valid_cluster_points.size() << endl;
 	// density
@@ -660,6 +660,6 @@ void ApproximateReservePush::execute()
 
 	log_ou.close();
 
-	// ´æ´¢¾ÛÀà½á¹û
+	// å­˜å‚¨èšç±»ç»“æœ
 	storeClusterResult(cluster_output);
 }

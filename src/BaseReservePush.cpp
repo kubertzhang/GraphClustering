@@ -6,7 +6,7 @@
 
 using namespace std;
 
-// ¼ÆËã×ªÒÆ¸ÅÂÊ: ¿É´¦Àí·ÇÍêÕûÍ¼
+// è®¡ç®—è½¬ç§»æ¦‚ç‡: å¯å¤„ç†éå®Œæ•´å›¾
 inline float getTransprob(Vertex * _u, Vertex * _v)
 {
 	float real_total_edgeweight = 0.0f;
@@ -21,14 +21,14 @@ inline float getTransprob(Vertex * _u, Vertex * _v)
 
 void BaseReservePush::baseReservePush()
 {
-	g_dbscanneighborsets.clear();  // ³õÊ¼»¯
+	g_dbscanneighborsets.clear();  // åˆå§‹åŒ–
 
 	for (int targetID = g_cluster_startid; targetID <= g_cluster_endid; targetID++)
 	{
 		vector<float> p(g_vertexnum, 0.0f);
 		vector<float> r(g_vertexnum, 0.0f);
 
-		set<int> pushback_queue;          // ´æ·Å´øpushbackµÄ½Úµã
+		set<int> pushback_queue;          // å­˜æ”¾å¸¦pushbackçš„èŠ‚ç‚¹
 
 		r[targetID] = 1.0f;               // target point
 		pushback_queue.insert(targetID);
@@ -38,12 +38,12 @@ void BaseReservePush::baseReservePush()
 			int uID = *pushback_queue.begin();
 			pushback_queue.erase(pushback_queue.begin());
 
-			Vertex * u = g_vertices[uID];   // ¶ÁÈ¡´øpushback½ÚµãĞÅÏ¢
+			Vertex * u = g_vertices[uID];   // è¯»å–å¸¦pushbackèŠ‚ç‚¹ä¿¡æ¯
 
 			p[uID] += g_alpha * r[uID];     // estimated value
 			g_pushbackcount++;
 
-			//±éÀúuÄÜ¹»µ½´ïµÄµã£¨reserve push£©
+			//éå†uèƒ½å¤Ÿåˆ°è¾¾çš„ç‚¹ï¼ˆreserve pushï¼‰
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -59,7 +59,7 @@ void BaseReservePush::baseReservePush()
 		}
 		pushback_queue.clear();
 
-		// »ñÈ¡ÁÚ¾Ó
+		// è·å–é‚»å±…
 		set<int> n_set;
 		for (int i = g_cluster_startid; i <= g_cluster_endid; i++)
 		{
@@ -75,7 +75,7 @@ void BaseReservePush::baseReservePush()
 
 void BaseReservePush::baseReservePushWithMemory()
 {
-	// ³õÊ¼»¯
+	// åˆå§‹åŒ–
 	m_pprDistances.clear();           
 	g_dbscanneighborsets.clear();
 
@@ -84,7 +84,7 @@ void BaseReservePush::baseReservePushWithMemory()
 		vector<float> p(g_vertexnum, 0.0);
 		vector<float> r(g_vertexnum, 0.0);
 
-		set<int> pushback_queue;      // ´æ·Å´øpushbackµÄ½Úµã
+		set<int> pushback_queue;      // å­˜æ”¾å¸¦pushbackçš„èŠ‚ç‚¹
 
 		r[targetID] = 1.0f;           // target point
 		pushback_queue.insert(targetID);
@@ -94,12 +94,12 @@ void BaseReservePush::baseReservePushWithMemory()
 			int uID = *pushback_queue.begin();
 			pushback_queue.erase(pushback_queue.begin());
 
-			Vertex * u = g_vertices[uID];   // ¶ÁÈ¡´øpushback½ÚµãĞÅÏ¢
+			Vertex * u = g_vertices[uID];   // è¯»å–å¸¦pushbackèŠ‚ç‚¹ä¿¡æ¯
 
 			p[uID] += g_alpha * r[uID];     // estimated value
 			g_pushbackcount++;
 
-			//±éÀúuÄÜ¹»µ½´ïµÄµã£¨reserve push£©
+			//éå†uèƒ½å¤Ÿåˆ°è¾¾çš„ç‚¹ï¼ˆreserve pushï¼‰
 			for (auto & wID : u->neighborvertex)
 			{
 				Vertex * w = g_vertices[wID];
@@ -113,12 +113,12 @@ void BaseReservePush::baseReservePushWithMemory()
 			r[uID] = 0.0;
 		}
 
-		// ±£´æ¾àÀë
+		// ä¿å­˜è·ç¦»
 		// ===============================================
 		map<int, float> m_map;
 		for (int i = g_cluster_startid; i <= g_cluster_endid; i++)
 		{
-			if (p[i] > g_epsilon)     // ppr < g_epsilon µÄµã£¬´æÔÚÎó²î£¬½«ÆäÊÓÎª0
+			if (p[i] > g_epsilon)     // ppr < g_epsilon çš„ç‚¹ï¼Œå­˜åœ¨è¯¯å·®ï¼Œå°†å…¶è§†ä¸º0
 			{
 				m_map.insert(pair<int, float>(i, p[i]));
 			}
@@ -145,12 +145,12 @@ void BaseReservePush::execute()
 	clock_t total_start, total_end;
 
 	log_ou << endl << "********************************" << endl << "Base Approach: " << endl;
-	// ====================================== ¶ÁÍ¼ ======================================
+	// ====================================== è¯»å›¾ ======================================
 	readGraph();
 	g_vertexnum = (int)g_vertices.size();
 
-	// ====================================== µü´ú¼ÆËã ======================================
-	// ÔËĞĞÊ±¼äÖØ¸´20´ÎÈ¡Æ½¾ùÖµ
+	// ====================================== è¿­ä»£è®¡ç®— ======================================
+	// è¿è¡Œæ—¶é—´é‡å¤20æ¬¡å–å¹³å‡å€¼
 	int runTimes = 1;  // default = 20
 	long long total_running_time = 0;
 	for (int i = 0; i < runTimes; i++)
@@ -171,7 +171,7 @@ void BaseReservePush::execute()
 				return;
 			}
 
-			// Conpute ppr score
+			// Compute ppr score
 			g_pushbackcount = 0;
 			baseReservePush();
 			//baseReservePushWithMemory();
@@ -191,15 +191,15 @@ void BaseReservePush::execute()
 				log_ou << g_edgeweight[STRUCTURE][i] << "\t";
 			}
 			log_ou << endl;
-			diff = weightUpdate_Entropy();        // ìØ£¨Ö»ÊµÏÖ°´Ö÷ÀàÅĞ¶Ï£©
-			//diff = weightUpdate_Vote();         // Í¶Æ±£¨Ö»ÊµÏÖ°´Ö÷ÀàÅĞ¶Ï£©
+			diff = weightUpdate_Entropy();        // ç†µï¼ˆåªå®ç°æŒ‰ä¸»ç±»åˆ¤æ–­ï¼‰
+			//diff = weightUpdate_Vote();         // æŠ•ç¥¨ï¼ˆåªå®ç°æŒ‰ä¸»ç±»åˆ¤æ–­ï¼‰
 		}
 		total_end = clock();
 
 		total_running_time += total_end - total_start;
 	}
 	
-	// ==================================== Í³¼Æ½á¹û ===================================
+	// ==================================== ç»Ÿè®¡ç»“æœ ===================================
 	log_ou << "Total runningtime: " << total_running_time / runTimes << endl;
 	log_ou << "Iteration Times: " << iterTimes << endl;
 	log_ou << "Total Pushback Times: " << total_pushback_times << endl;
@@ -210,8 +210,8 @@ void BaseReservePush::execute()
 	}
 	log_ou << endl;
 	
-	// ----- ¾ÛÀà·ÖÎö -----
-	// ¾ÛÀàÊıÄ¿
+	// ----- èšç±»åˆ†æ -----
+	// èšç±»æ•°ç›®
 	log_ou << "Cluster_Amount: " << m_clusters.size() << endl;
 	log_ou << "Valid_Cluster_points: " << m_valid_cluster_points.size() << endl;
 	// density
@@ -236,9 +236,9 @@ void BaseReservePush::execute()
 	// --------------------------------------------------------
 	log_ou.close();
 
-	//// ´æ´¢¾ÛÀà½á¹û
+	//// å­˜å‚¨èšç±»ç»“æœ
 	//storeClusterResult(cluster_output);
-	//// ´æ´¢¾ÛÀà½á¹û == ¶Ô±ÈSToC
+	//// å­˜å‚¨èšç±»ç»“æœ == å¯¹æ¯”SToC
 	//string cluster_output_path = "F:\\WorkSpace\\GraphClustering\\GC_Result\\GT_vs_SToC\\cluster_result_1";
 	//storeClusterResultForComparison(cluster_output_path);
 }
